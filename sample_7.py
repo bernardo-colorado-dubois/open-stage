@@ -18,11 +18,10 @@ bigquery_origin = GCPBigQueryOrigin(
 bigquery_pipe = Pipe(name="bigquery_pipe")
 
 gemini_prompt = """
-  "1) Provide only the setosa  species
-   2) with a petal length less or equal than 0.2 from the following data 
-   3) drop the sepal columns 
-   4) show the species in lower case"
-   5) change in species the - to _
+  "1) Provide only the setosa species from the following data
+   2) drop the sepal columns 
+   3) show the species in lower case"
+   4) change in species the '-' char to '_' char
 """
 
 gemini_transformer = GeminiPromptTransformer(
