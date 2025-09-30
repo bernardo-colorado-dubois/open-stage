@@ -20,7 +20,7 @@ bigquery_pipe = Pipe(name="bigquery_pipe")
 gemini_prompt = """
   "1) Provide only the setosa species from the following data
    2) drop the sepal columns 
-   3) show the species in lower case"
+   3) show the species in upper case"
    4) change in species the '-' char to '_' char
 """
 
