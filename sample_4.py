@@ -6,6 +6,7 @@ import os
 load_dotenv()
 
 GCP_CREDENTIALS_FILE_PATH = os.getenv('GCP_CREDENTIALS_FILE_PATH')
+GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
 
 csv_iris = CSVOrigin(
     name='csv_iris',filepath_or_buffer='./csv/iris.csv',
@@ -31,7 +32,7 @@ iris_pipe_a = Pipe(name='iris_pipe')
 
 iris_bigquery = GCPBigQueryDestination(
     name="iris_bq_destination",
-    project_id="qualitasfraude",
+    project_id=GCP_PROJECT_ID,
     dataset="SAMPLE",
     table="IRIS",
     write_disposition="WRITE_TRUNCATE",
