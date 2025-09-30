@@ -6,11 +6,12 @@ load_dotenv()
 
 GCP_CREDENTIALS_FILE_PATH = os.getenv('GCP_CREDENTIALS_FILE_PATH')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
 
 bigquery_origin = GCPBigQueryOrigin(
   name="bigquery_origin",
-  project_id="qualitasfraude",
-  query="SELECT * FROM `qualitasfraude.SAMPLE.IRIS`;",
+  project_id=GCP_PROJECT_ID,
+  query="SELECT * FROM `SAMPLE.IRIS`;",
   credentials_path=GCP_CREDENTIALS_FILE_PATH
 )
 
