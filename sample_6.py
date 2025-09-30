@@ -22,7 +22,7 @@ anthropic_prompt = """
   "1) Provide only the setosa  species
    2) with a petal length less or equal than 0.2 from the following data 
    3) drop the sepal columns 
-   4) show the species in lower case"
+   4) show the species in lower case
    5) change in species the - to _
 """
 
