@@ -16,3 +16,6 @@ db-dtypes
 python-dotenv
 
 anthropic
+
+google-genai
+google-generativeai
