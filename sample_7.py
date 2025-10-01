@@ -22,6 +22,8 @@ gemini_prompt = """
    2) drop the sepal columns 
    3) show the species in upper case"
    4) change in species the '-' char to '_' char
+   5) pethal width less or equal to 0.2
+   6) pthal less than 1.4
 """
 
 gemini_transformer = GeminiPromptTransformer(
