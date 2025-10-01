@@ -174,8 +174,7 @@ class Funnel(Node):
     else:
       print(f"Warning: Funnel '{self.name}' has no combined data or no output pipe")
       
-      
-      
+        
 class Switcher(Node):
   def __init__(self, name: str, field: str, mapping: dict, fail_on_unmatch: bool = False):
     super().__init__()
@@ -278,7 +277,6 @@ class Switcher(Node):
     self.received_df = None
     
     
-    
 class CSVOrigin(Origin):
   def __init__(self, name: str, **kwargs):
     super().__init__()
@@ -314,7 +312,6 @@ class CSVOrigin(Origin):
       # No lanzamos la excepción para que el pipeline no se rompa completamente
       
       
-
 class CSVDestination(Destination):
   def __init__(self, name: str, **kwargs):
     super().__init__()
@@ -343,7 +340,6 @@ class CSVDestination(Destination):
       print(f"CSV arguments used: {self.csv_kwargs}")
       print(f"DataFrame shape: {df.shape}")
       # No lanzamos la excepción para que el pipeline no se rompa completamente
-      
       
       
 class Copy(Node):
@@ -399,7 +395,6 @@ class Copy(Node):
     
     # Limpiar después del procesamiento
     self.received_df = None
-    
     
     
 class Aggregator(Node):
@@ -511,7 +506,6 @@ class Aggregator(Node):
     self.received_df = None
     
     
-    
 class DeleteColumns(Node):
   def __init__(self, name: str, columns: list):
     super().__init__()
@@ -595,8 +589,7 @@ class DeleteColumns(Node):
     # Limpiar después del procesamiento
     self.received_df = None
     
-    
-    
+
 class Filter(Node):
   def __init__(self, name: str, field: str, condition: str, value_or_values):
     super().__init__()
@@ -607,7 +600,7 @@ class Filter(Node):
     self.received_df = None  # Para almacenar el DataFrame de entrada
     
     # Validar que la condición sea soportada
-    valid_conditions = ['<', '>', '<=', '>=', '!=', '=', 'in', 'not in']
+    valid_conditions = ['<', '>', '<=', '>=', '!=', '=', 'in', 'not in', 'between']
     if self.condition not in valid_conditions:
       raise ValueError(f"Filter '{self.name}': condition '{self.condition}' not supported. Valid conditions: {valid_conditions}")
     
@@ -617,6 +610,13 @@ class Filter(Node):
         raise ValueError(f"Filter '{self.name}': condition '{self.condition}' requires a list for value_or_values, got {type(self.value_or_values)}")
       if len(self.value_or_values) == 0:
         raise ValueError(f"Filter '{self.name}': value_or_values list cannot be empty for condition '{self.condition}'")
+    
+    # Validar que para 'between' se proporcione una lista con 2 elementos
+    if self.condition == 'between':
+      if not isinstance(self.value_or_values, list):
+        raise ValueError(f"Filter '{self.name}': condition 'between' requires a list for value_or_values, got {type(self.value_or_values)}")
+      if len(self.value_or_values) != 2:
+        raise ValueError(f"Filter '{self.name}': condition 'between' requires exactly 2 values [lower, upper], got {len(self.value_or_values)} values")
     
   def add_input(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
@@ -680,6 +680,10 @@ class Filter(Node):
         mask = df[self.field].isin(self.value_or_values)
       elif self.condition == 'not in':
         mask = ~df[self.field].isin(self.value_or_values)
+      elif self.condition == 'between':
+        lower_bound = self.value_or_values[0]
+        upper_bound = self.value_or_values[1]
+        mask = (df[self.field] >= lower_bound) & (df[self.field] <= upper_bound)
       
       # Aplicar la máscara para filtrar el DataFrame
       filtered_df = df[mask]
@@ -700,9 +704,8 @@ class Filter(Node):
       print(f"Filter parameters: field='{self.field}', condition='{self.condition}', value_or_values={self.value_or_values}")
     
     # Limpiar después del procesamiento
-    self.received_df = None
-    
-    
+    self.received_df = None    
+
     
 class Joiner(Node):
   def __init__(self, name: str, left: str, right: str, key: str, join_type: str):

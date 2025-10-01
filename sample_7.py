@@ -21,9 +21,9 @@ gemini_prompt = """
   "1) Provide only the setosa species from the following data
    2) drop the sepal columns 
    3) show the species in upper case"
-   4) change in species the '-' char to '_' char
+   4) change in species the '-' char to space char
    5) pethal width less or equal to 0.2
-   6) pthal less than 1.4
+   6) pethal less than 1.4
 """
 
 gemini_transformer = GeminiPromptTransformer(
