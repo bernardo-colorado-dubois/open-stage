@@ -18,19 +18,19 @@ bigquery_origin = GCPBigQueryOrigin(
 bigquery_pipe = Pipe(name="bigquery_pipe")
 
 gemini_prompt = """
-  "1) Provide only the setosa species from the following data
-   2) drop the sepal columns 
-   3) show the species in upper case"
-   4) change in species the '-' char to space char
-   5) pethal width less or equal to 0.2
-   6) pethal less than 1.4
+  "1) Provide only the setosa flowers from the following data
+   2) I don't need the sepal columns 
+   3) show the species in upper"
+   4) change in species the - char to space char
+   5) pethal width no more to 0.2
+   6) pethal no more than 1.4
 """
 
 gemini_transformer = GeminiPromptTransformer(
   name="gemini_transformer",
   api_key=GEMINI_API_KEY,
   prompt=gemini_prompt,
-  model="gemini-2.5-flash"
+  model="gemini-2.5-pro"
 )
 
 gemini_pipe = Pipe(name="gemini_pipe")
