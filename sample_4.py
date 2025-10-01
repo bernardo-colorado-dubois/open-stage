@@ -33,7 +33,7 @@ iris_pipe_a = Pipe(name='iris_pipe')
 iris_bigquery = GCPBigQueryDestination(
     name="iris_bq_destination",
     project_id=GCP_PROJECT_ID,
-    dataset="SAMPLE",
+    dataset="SAMPLES",
     table="IRIS",
     write_disposition="WRITE_TRUNCATE",
     credentials_path=GCP_CREDENTIALS_FILE_PATH

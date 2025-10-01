@@ -11,7 +11,7 @@ GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
 bigquery_origin = GCPBigQueryOrigin(
   name="bigquery_origin",
   project_id=GCP_PROJECT_ID,
-  query="SELECT * FROM `SAMPLE.IRIS`;",
+  query="SELECT * FROM `SAMPLES.IRIS`;",
   credentials_path=GCP_CREDENTIALS_FILE_PATH
 )
 
