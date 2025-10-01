@@ -1,15 +1,31 @@
 import os
-from src.core import Pipe, Printer, GCPBigQueryOrigin
+from src.core import Pipe, Printer, PostgresOrigin
+from dotenv import load_dotenv
+from urllib.parse import quote_plus
+
+
+load_dotenv()
 
 credentials_path = "/home/berni-boom/qualitasfraude-8be2cf5b3f4b.json"
 
-bigquery_origin = GCPBigQueryOrigin(
-  name="bigquery_origin",
-  project_id="qualitasfraude",
-  query="SELECT * FROM `qualitasfraude.DF_TEST.query_test` LIMIT 1000;",
-  credentials_path=credentials_path
+PSQL_DB_HOST = os.getenv("PSQL_DB_HOST")
+PSQL_DB_PORT = int(os.getenv("PSQL_DB_PORT"))
+PSQL_DB_NAME = os.getenv("PSQL_DB_NAME")
+PSQL_DB_USER = os.getenv("PSQL_DB_USER")
+PSQL_DB_PASSWORD = quote_plus(os.getenv("PSQL_DB_PASSWORD"))
+
+postgres_origin = PostgresOrigin(
+  host=PSQL_DB_HOST,
+  port=PSQL_DB_PORT,
+  database=PSQL_DB_NAME,
+  user=PSQL_DB_USER,
+  password=PSQL_DB_PASSWORD,
+  query="select * FROM rocket.jira_issues;"
 )
-bigquery_pipe = Pipe(name="bigquery_origin")
-printer = Printer(name="printer")
-bigquery_origin.add_output(bigquery_pipe).set_destination(printer)
-bigquery_origin.pump()
+
+postgres_pipe = Pipe(name="postgres_pipe")
+
+postgres_printer = Printer(name="postgres_printer")
+
+postgres_origin.add_output(postgres_pipe).set_destination(postgres_printer)
+
