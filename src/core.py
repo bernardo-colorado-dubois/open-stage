@@ -43,7 +43,6 @@ class Pipe:
   def set_destination(self, destination):
     self.destination = destination
     self.destination.add_input(self)
-    return self  # Para permitir method chaining
     
   def flow(self, df: DataFrame) -> None:
     data_package = DataPackage(self.name, df)
