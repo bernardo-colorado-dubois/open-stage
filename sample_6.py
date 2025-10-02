@@ -37,8 +37,6 @@ anthropic_pipe = Pipe(name="anthropic_pipe")
 
 anthropic_printer = Printer(name="anthropic_printer")
 
-bigquery_origin.add_output(bigquery_pipe).set_destination(anthropic_transformer)
-
-anthropic_transformer.add_output(anthropic_pipe).set_destination(anthropic_printer)
+bigquery_origin.add_output(bigquery_pipe).set_destination(anthropic_transformer).add_output(anthropic_pipe).set_destination(anthropic_printer)
 
 bigquery_origin.pump()

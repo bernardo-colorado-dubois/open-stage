@@ -43,6 +43,8 @@ class Pipe:
   def set_destination(self, destination):
     self.destination = destination
     self.destination.add_input(self)
+    if isinstance(destination, Node):
+      return destination
     
   def flow(self, df: DataFrame) -> None:
     data_package = DataPackage(self.name, df)
@@ -94,6 +96,8 @@ class Generator(Origin):
       self.outputs[pipe.get_name()] = pipe
       pipe.set_origin(self)
       return pipe
+    else:
+      raise ValueError(f"Generator '{self.name}' can only have 1 input")
   
   def pump(self) -> None:
     numbers = [i for i in range(self.length)]
