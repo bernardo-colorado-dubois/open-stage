@@ -42,7 +42,7 @@ class Pipe:
     
   def set_destination(self, destination):
     self.destination = destination
-    self.destination.add_input(self)
+    self.destination.add_input_pipe(self)
     if isinstance(destination, Node):
       return destination
     
@@ -56,7 +56,7 @@ class Origin:
     self.outputs = {}  # Inicializar como variable de instancia
   
   @abstractmethod
-  def add_output(self, pipe: Pipe) -> None:
+  def add_output_pipe(self, pipe: Pipe) -> None:
     self.outputs[pipe.get_name()] = pipe
     pipe.set_origin(self)
     return pipe
@@ -71,7 +71,7 @@ class Destination:
     self.inputs = {}  # Inicializar como variable de instancia
   
   @abstractmethod
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     self.inputs[pipe.get_name()] = pipe
   
   @abstractmethod
@@ -91,7 +91,7 @@ class Generator(Origin):
     self.length = length
     self.name = name
     
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
       pipe.set_origin(self)
@@ -110,7 +110,7 @@ class Printer(Destination):
     super().__init__()  # Inicializar la clase padre
     self.name = name 
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     
@@ -128,11 +128,11 @@ class Funnel(Node):
     self.expected_inputs = 0
     self.is_ready_to_pump = False
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     self.inputs[pipe.get_name()] = pipe
     self.expected_inputs += 1
     
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
       pipe.set_origin(self)
@@ -192,14 +192,14 @@ class Switcher(Node):
       if not isinstance(key, (str, int)):
         raise ValueError(f"Switcher '{self.name}': mapping key '{key}' must be string or integer, got {type(key)}")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Switcher '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Permite múltiples salidas
     self.outputs[pipe.get_name()] = pipe
     pipe.set_origin(self)
@@ -286,7 +286,7 @@ class CSVOrigin(Origin):
     self.name = name
     self.csv_kwargs = kwargs  # Almacenar todos los argumentos para read_csv
     
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida (como Generator)
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -321,7 +321,7 @@ class CSVDestination(Destination):
     self.name = name
     self.csv_kwargs = kwargs  # Almacenar todos los argumentos para to_csv
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada (como Printer)
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
@@ -351,14 +351,14 @@ class Copy(Node):
     self.name = name
     self.received_df = None  # Para almacenar el DataFrame de entrada
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Copy '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Permite múltiples salidas
     self.outputs[pipe.get_name()] = pipe
     pipe.set_origin(self)
@@ -420,14 +420,14 @@ class Aggregator(Node):
     if self.agg_type != 'count' and self.field_to_agg is None:
       raise ValueError(f"Aggregator '{self.name}': field_to_agg is required for aggregation type '{self.agg_type}' (only 'count' can have field_to_agg=None)")
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Aggregator '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -524,14 +524,14 @@ class DeleteColumns(Node):
     if len(columns) == 0:
       raise ValueError(f"DeleteColumns '{self.name}': columns list cannot be empty")
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"DeleteColumns '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -621,14 +621,14 @@ class Filter(Node):
       if len(self.value_or_values) != 2:
         raise ValueError(f"Filter '{self.name}': condition 'between' requires exactly 2 values [lower, upper], got {len(self.value_or_values)} values")
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Filter '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -731,14 +731,14 @@ class Joiner(Node):
     if self.left_pipe_name == self.right_pipe_name:
       raise ValueError(f"Joiner '{self.name}': left and right pipe names must be different")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite exactamente 2 entradas
     if len(self.inputs.keys()) < 2:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Joiner '{self.name}' can only have 2 inputs")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -839,14 +839,14 @@ class Transformer(Node):
     if not callable(self.transformer_function):
       raise ValueError(f"Transformer '{self.name}': transformer_function must be callable, got {type(self.transformer_function)}")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Transformer '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -928,7 +928,7 @@ class APIRestOrigin(Origin):
     if self.fields is not None and len(self.fields) == 0:
       raise ValueError(f"APIRestOrigin '{self.name}': fields list cannot be empty")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida (como CSVOrigin)
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1036,7 +1036,7 @@ class GCPBigQueryOrigin(Origin):
     if not query or not query.strip():
       raise ValueError(f"GCPBigQueryOrigin '{self.name}': query cannot be empty")
     
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida (como otros Origins)
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1146,7 +1146,7 @@ class GCPBigQueryDestination(Destination):
     if write_disposition not in valid_dispositions:
       raise ValueError(f"GCPBigQueryDestination '{self.name}': write_disposition must be one of {valid_dispositions}, got '{write_disposition}'")
     
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada (como otros Destinations)
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
@@ -1261,14 +1261,14 @@ class RemoveDuplicates(Node):
     if self.retain not in valid_retains:
       raise ValueError(f"RemoveDuplicates '{self.name}': retain must be one of {valid_retains}, got '{self.retain}'")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"RemoveDuplicates '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1377,14 +1377,14 @@ class AnthropicPromptTransformer(Node):
     if max_tokens <= 0:
       raise ValueError(f"AnthropicPromptTransformer '{self.name}': max_tokens must be positive, got {max_tokens}")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"AnthropicPromptTransformer '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1578,14 +1578,14 @@ class GeminiPromptTransformer(Node):
     if self.max_output_tokens <= 0:
       raise ValueError(f"GeminiPromptTransformer '{self.name}': max_tokens must be positive, got {self.max_output_tokens}")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"GeminiPromptTransformer '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1722,14 +1722,14 @@ Return the complete CSV only."""
     if max_tokens <= 0:
       raise ValueError(f"GeminiPromptTransformer '{self.name}': max_tokens must be positive, got {max_tokens}")
   
-  def add_input(self, pipe: Pipe) -> None:
+  def add_input_pipe(self, pipe: Pipe) -> None:
     # Solo permite 1 entrada
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"GeminiPromptTransformer '{self.name}' can only have 1 input")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
@@ -1923,7 +1923,7 @@ class PostgresOrigin(Origin):
     if port <= 0:
       raise ValueError(f"PostgresOrigin '{self.name}': port must be positive, got {port}")
   
-  def add_output(self, pipe: Pipe) -> Pipe:
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
     # Solo permite 1 salida
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe

@@ -40,16 +40,16 @@ printer_twos = Printer("printer_twos")
 # 3 generadores → funnel → switcher → 2 printers
 
 # Conectar generadores al funnel
-generator1.add_output(pipe1).set_destination(funnel)
-generator2.add_output(pipe2).set_destination(funnel)
-generator3.add_output(pipe3).set_destination(funnel)
+generator1.add_output_pipe(pipe1).set_destination(funnel)
+generator2.add_output_pipe(pipe2).set_destination(funnel)
+generator3.add_output_pipe(pipe3).set_destination(funnel)
 
 # Conectar funnel al switcher
-funnel.add_output(pipe_to_switcher).set_destination(switcher)
+funnel.add_output_pipe(pipe_to_switcher).set_destination(switcher)
 
 # Conectar switcher a los printers
-switcher.add_output(pipe_ones).set_destination(printer_ones)
-switcher.add_output(pipe_twos).set_destination(printer_twos)
+switcher.add_output_pipe(pipe_ones).set_destination(printer_ones)
+switcher.add_output_pipe(pipe_twos).set_destination(printer_twos)
 
 # Ejecutar el pipeline
 print("=== Iniciando pipeline ===")

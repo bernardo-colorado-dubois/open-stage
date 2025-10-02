@@ -39,6 +39,6 @@ iris_bigquery = GCPBigQueryDestination(
     credentials_path=GCP_CREDENTIALS_FILE_PATH
 )
 
-csv_iris.add_output(iris_pipe_a).set_destination(iris_bigquery)
+csv_iris.add_output_pipe(iris_pipe_a).set_destination(iris_bigquery)
 
 csv_iris.pump()

@@ -37,6 +37,6 @@ gemini_pipe = Pipe(name="gemini_pipe")
 
 gemini_printer = Printer(name="gemini_printer")
 
-bigquery_origin.add_output(bigquery_pipe).set_destination(gemini_transformer).add_output(gemini_pipe).set_destination(gemini_printer)
+bigquery_origin.add_output_pipe(bigquery_pipe).set_destination(gemini_transformer).add_output_pipe(gemini_pipe).set_destination(gemini_printer)
 
 bigquery_origin.pump()

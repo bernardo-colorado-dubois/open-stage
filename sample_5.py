@@ -19,6 +19,6 @@ bigquery_pipe = Pipe(name="bigquery_pipe")
 
 bigquery_printer = Printer(name="bigquery_printer")
 
-bigquery_origin.add_output(bigquery_pipe).set_destination(bigquery_printer)
+bigquery_origin.add_output_pipe(bigquery_pipe).set_destination(bigquery_printer)
 
 bigquery_origin.pump()

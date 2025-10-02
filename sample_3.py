@@ -25,7 +25,7 @@ postgres_pipe = Pipe(name="postgres_pipe")
 
 postgres_printer = Printer(name="postgres_printer")
 
-postgres_origin.add_output(postgres_pipe).set_destination(postgres_printer)
+postgres_origin.add_output_pipe(postgres_pipe).set_destination(postgres_printer)
 
 postgres_origin.pump()
 

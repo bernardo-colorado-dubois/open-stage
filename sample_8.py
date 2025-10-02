@@ -38,8 +38,8 @@ iris_pipe_filtered = Pipe(name='iris_pipe')
 
 iris_printer = Printer(name='iris_printer')
 
-csv_iris.add_output(iris_pipe).set_destination(iris_filter)
+csv_iris.add_output_pipe(iris_pipe).set_destination(iris_filter)
 
-iris_filter.add_output(iris_pipe_filtered).set_destination(iris_printer)
+iris_filter.add_output_pipe(iris_pipe_filtered).set_destination(iris_printer)
 
 csv_iris.pump()
