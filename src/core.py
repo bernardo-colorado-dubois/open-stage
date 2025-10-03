@@ -24,7 +24,7 @@ class DataPackage:
   def get_pipe_name(self) -> str:
     return self.pipe_name
   
-  def get_df(self):
+  def get_df(self)-> DataFrame:
     return self.df
 
 
@@ -113,6 +113,8 @@ class Printer(Destination):
   def add_input_pipe(self, pipe: Pipe) -> None:
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
+    else:
+      raise ValueError(f"Printer '{self.name}' can only have 1 input")
     
   def sink(self, data_package: DataPackage) -> None:
     print(f"Data received from pipe: {data_package.get_pipe_name()}")
