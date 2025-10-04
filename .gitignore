@@ -1,3 +1,4 @@
+delete_python_cache.sh
 venv
 .env
 csv
