@@ -1,9 +1,6 @@
-from src.core import CSVOrigin, Pipe, Printer, Filter
-from dotenv import load_dotenv
-import os
+from src.core.base import Pipe
+from src.core.common import CSVOrigin, Printer, Filter
 
-
-load_dotenv()
 
 csv_iris = CSVOrigin(
   name='csv_iris',filepath_or_buffer='./csv/iris.csv',

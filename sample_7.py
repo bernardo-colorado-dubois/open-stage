@@ -1,5 +1,7 @@
 import os
-from src.core import Pipe, Printer, GCPBigQueryOrigin,GeminiPromptTransformer
+from src.core.common import Printer, Pipe
+from src.google.cloud import GCPBigQueryOrigin
+from src.google.gemini import GeminiPromptTransformer
 from dotenv import load_dotenv
 
 load_dotenv()

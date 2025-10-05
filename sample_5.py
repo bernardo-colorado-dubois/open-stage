@@ -1,5 +1,6 @@
 import os
-from src.core import Pipe, Printer, GCPBigQueryOrigin
+from src.core.common import Printer,Pipe
+from src.google.cloud import GCPBigQueryOrigin
 from dotenv import load_dotenv
 
 load_dotenv()

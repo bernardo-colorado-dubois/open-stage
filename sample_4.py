@@ -1,7 +1,8 @@
-from src.core import CSVOrigin, Pipe, Printer, GCPBigQueryDestination
+from src.core.base import Pipe
+from src.core.common import CSVOrigin
+from src.google.cloud import GCPBigQueryDestination
 from dotenv import load_dotenv
 import os
-
 
 load_dotenv()
 

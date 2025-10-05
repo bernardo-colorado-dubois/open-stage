@@ -1,4 +1,4 @@
-from src.core import Generator, Pipe, Printer, Funnel, Switcher
+from src.core.common import Generator, Pipe, Printer, Funnel, Switcher
 # Asumiendo que Switcher está en el mismo archivo o importado
 
 # Crear 3 generadores

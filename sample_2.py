@@ -1,4 +1,4 @@
-from src.core import CSVOrigin, Pipe, Printer, Funnel, Switcher,CSVDestination,Copy,Aggregator
+from src.core.common import CSVOrigin, Pipe, Funnel, Switcher, CSVDestination, Copy, Aggregator
 
 csv_origin = CSVOrigin(name='iris',filepath_or_buffer='./csv/iris.csv')
 

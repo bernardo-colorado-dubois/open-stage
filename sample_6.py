@@ -1,5 +1,7 @@
 import os
-from src.core import Pipe, Printer, GCPBigQueryOrigin,AnthropicPromptTransformer
+from src.core.common import Printer,Pipe
+from src.google.cloud import GCPBigQueryOrigin
+from src.anthropic.claude import AnthropicPromptTransformer
 from dotenv import load_dotenv
 
 load_dotenv()
