@@ -1,5 +1,4 @@
-from src.core.base import Pipe
-from src.core.common import CSVOrigin, Printer, Filter
+from src.core.common import Pipe, CSVOrigin, Printer, Filter
 
 
 csv_iris = CSVOrigin(
