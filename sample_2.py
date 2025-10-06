@@ -1,44 +1,112 @@
-from src.core.common import CSVOrigin, Pipe, Funnel, Switcher, CSVDestination, Copy, Aggregator
+from src.core.base import Pipe
+from src.core.common import CSVOrigin,CSVDestination, Printer, Filter, DeleteColumns, Switcher,Aggregator
 
-csv_origin = CSVOrigin(name='iris',filepath_or_buffer='./csv/iris.csv')
-
-iris_pipe_a = Pipe(name='iris_pipe')
-
-iris_switcher = Switcher(
-    name='iris_switcher',
-    field='Species',
-    mapping={
-        'Iris-setosa': 'setosa_pipe',
-        'Iris-versicolor': 'versicolor_pipe',
-        'Iris-virginica': 'virginica_pipe'
-    },
-    fail_on_unmatch=True
+coffee_sales_csv_origin = CSVOrigin(
+  name='coffee_sales_csv_origin',
+  filepath_or_buffer='./csv/coffee_sales.csv',
+  names =[
+    'hour_of_day'
+    ,'cash_type'
+    ,'money'
+    ,'coffee_name'
+    ,'time_of_day'
+    ,'day_of_week'
+    ,'month_name'
+    ,'week_number'
+    ,'month_number'
+    ,'date'
+    ,'time'
+  ],
+  dtype={
+    'hour_of_day': 'int64'
+    ,'cash_type': 'string'
+    ,'money': 'float64'
+    ,'coffee_name': 'string'
+    ,'time_of_day': 'string'
+    ,'day_of_week': 'string'
+    ,'month_name': 'string'
+    ,'week_number': 'int64'
+    ,'month_number': 'int64'
+    ,'date': 'string'
+    ,'time': 'string'
+  },
+  skiprows=1,
+  header=None,
 )
 
-setosa_pipe = Pipe(name='setosa_pipe')
-versicolor_pipe = Pipe(name='versicolor_pipe')
-virginica_pipe = Pipe(name='virginica_pipe')
+coffee_sales_pipe_1 = Pipe(name='coffee_sales_pipe_1')
 
-iris_funnel = Funnel(name='iris_funnel')
+coffee_sales_filter = Filter(
+  name='coffee_sales_filter',
+  field="time_of_day",
+  condition="in",
+  value_or_values=["Afternoon", "Morning"]
+)
 
-iris_pipe_b = Pipe(name='iris_pipe_b')
+coffee_sales_pipe_2 = Pipe(name='coffee_sales_pipe_2')
 
-iris_copy = Copy(name='iris_copy')
+coffee_sales_delete_columns = DeleteColumns(
+  name='coffee_sales_delete_columns',
+  columns=['cash_type','hour_of_day']
+)
 
-iris_pipe_to_csv = Pipe(name='iris_pipe_to_csv')
-iris_csv_destination = CSVDestination(name='iris_csv_destination',path_or_buf='./csv/iris_output.csv',index=False)
-iris_pipe_to_agg = Pipe(name='iris_pipe_to_agg')
-iris_counter = Aggregator(name='iris_counter',key='Species',agg_field_name='FlowerCount',field_to_agg=None,agg_type='count')
-iris_pipe_to_csv_count = Pipe(name='iris_pipe_to_csv_count')
-iris_count_to_csv = CSVDestination(name='iris_count_to_csv',path_or_buf='./csv/iris_count_output.csv',index=False)
+coffee_sales_pipe_3 = Pipe(name='coffee_sales_pipe_3')
 
-csv_origin.add_output_pipe(iris_pipe_b).set_destination(iris_switcher)
-iris_switcher.add_output_pipe(setosa_pipe).set_destination(iris_funnel)
-iris_switcher.add_output_pipe(versicolor_pipe).set_destination(iris_funnel)
-iris_switcher.add_output_pipe(virginica_pipe).set_destination(iris_funnel)
-iris_funnel.add_output_pipe(iris_pipe_b).set_destination(iris_copy)
-iris_copy.add_output_pipe(iris_pipe_to_csv).set_destination(iris_csv_destination)
-iris_copy.add_output_pipe(iris_pipe_to_agg).set_destination(iris_counter)
-iris_counter.add_output_pipe(iris_pipe_to_csv_count).set_destination(iris_count_to_csv)
+coffee_sales_switcher = Switcher(
+  name='coffee_sales_switcher',
+  field='time_of_day',
+  mapping={
+    'Afternoon': 'coffe_sales_pipe_afternoon',
+    'Morning': 'coffe_sales_pipe_morning',
+  }
+)
 
-csv_origin.pump()
+coffe_sales_pipe_morning = Pipe(name='coffe_sales_pipe_morning')
+coffe_sales_pipe_afternoon = Pipe(name='coffe_sales_pipe_afternoon')
+
+coffee_sales_morning_agg = Aggregator(
+  name='coffee_sales_morning_agg',
+  key='day_of_week',
+  agg_field_name='sales_count',
+  agg_type='count',
+  field_to_agg=None
+)
+
+coffee_sales_afternoon_agg = Aggregator(
+  name='coffee_sales_morning_agg',
+  key='day_of_week',
+  agg_field_name='average_price',
+  agg_type='mean',
+  field_to_agg='money'
+)
+
+coffee_sales_morning_count_pipe = Pipe(name='coffee_sales_morning_count_pipe')
+coffee_sales_afternoon_mean_pipe = Pipe(name='coffee_sales_afternoon_mean_pipe')
+
+coffee_sales_morning_agg_csv_destination = CSVDestination(
+  name='coffee_sales_morning_agg_csv_destination',
+  path_or_buf='./csv/coffee_sales_morning_agg.csv',
+  index=False
+)
+
+coffee_sales_afternoon_agg_csv_destination = CSVDestination(
+  name='coffee_sales_morning_agg_csv_destination',
+  path_or_buf='./csv/coffee_sales_afternoon_agg.csv',
+  index=False
+)
+
+coffee_sales_csv_origin.add_output_pipe(coffee_sales_pipe_1).set_destination(coffee_sales_filter)
+
+coffee_sales_filter.add_output_pipe(coffee_sales_pipe_2).set_destination(coffee_sales_delete_columns)
+
+coffee_sales_delete_columns.add_output_pipe(coffee_sales_pipe_3).set_destination(coffee_sales_switcher)
+
+coffee_sales_switcher.add_output_pipe(coffe_sales_pipe_morning).set_destination(coffee_sales_morning_agg)
+
+coffee_sales_switcher.add_output_pipe(coffe_sales_pipe_afternoon).set_destination(coffee_sales_afternoon_agg)
+
+coffee_sales_morning_agg.add_output_pipe(coffee_sales_morning_count_pipe).set_destination(coffee_sales_morning_agg_csv_destination)
+
+coffee_sales_afternoon_agg.add_output_pipe(coffee_sales_afternoon_mean_pipe).set_destination(coffee_sales_afternoon_agg_csv_destination)
+
+coffee_sales_csv_origin.pump()
