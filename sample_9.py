@@ -33,10 +33,9 @@ iris_pipe = Pipe(name='iris_pipe')
 
 deepseek_prompt = """
   "1) Provide only the virginica  species
-   2) drop the sepal columns 
-   3) show the species in lower case
-   4) change in species the - to space
-   5) sort by petal_length descending
+   2) show the species in lower case
+   3) change in species the - to space
+   4) sort by petal_length descending
 """
 
 deepseek_transformer = DeepSeekPromptTransformer(
