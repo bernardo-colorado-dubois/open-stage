@@ -1,8 +1,9 @@
 import os
-from src.core.common import Pipe, Printer
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
+from src.core.base import Pipe
+from src.core.common import  Printer
 from src.postgres.common import PostgresOrigin
 
 load_dotenv()
