@@ -18,6 +18,63 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 - 🔧 **Extensible Architecture** by provider and component type
 - 📜 **Open Source** under MIT License
 
+## Core Components
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class DataPackage {
+        -string pipe_name
+        -DataFrame df
+        +get_pipe_name() string
+        +get_df() DataFrame
+    }
+    
+    class Pipe {
+        -string name
+        -Origin origin
+        -Destination destination
+        +get_name() string
+        +set_origin(origin)
+        +set_destination(destination)
+        +flow(df DataFrame)
+    }
+    
+    class Origin {
+        <<abstract>>
+        -dict outputs
+        +add_output_pipe(pipe)*
+        +pump()*
+    }
+    
+    class Destination {
+        <<abstract>>
+        -dict inputs
+        +add_input_pipe(pipe)*
+        +sink(data_package)*
+    }
+    
+    class Node {
+        -dict inputs
+        -dict outputs
+        +add_input_pipe(pipe)*
+        +add_output_pipe(pipe)*
+        +sink(data_package)*
+        +pump()*
+    }
+    
+    Origin <|-- Node
+    Destination <|-- Node
+    
+    Pipe --> Origin : origin
+    Pipe --> Destination : destination
+    Pipe ..> DataPackage : creates
+    
+    Origin --> Pipe : outputs
+    Destination --> Pipe : inputs
+```
+
 ## 🚀 Quick Start
 
 ### Installation
