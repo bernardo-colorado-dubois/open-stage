@@ -223,6 +223,22 @@ aggregator.add_output_pipe(pipe3).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
+```mermaid
+graph LR
+    A[CSVOrigin<br/>reader<br/>sales.csv] -->|pipe: p1| B[Filter<br/>high_value<br/>amount > 1000]
+    B -->|pipe: p2| C[Aggregator<br/>total_sales<br/>SUM amount<br/>GROUP BY category]
+    C -->|pipe: p3| D[CSVDestination<br/>writer<br/>summary.csv]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    style C fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+    
+    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    classDef transformer fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
 ### Example 2: AI-Powered Transformation
 
 ```python
@@ -253,6 +269,20 @@ claude.add_output_pipe(pipe2).set_destination(csv_dest)
 
 # Execute
 csv_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[CSVOrigin<br/>reader<br/>reviews.csv] -->|pipe: input| B[🤖 AnthropicPromptTransformer<br/>sentiment_analyzer<br/>claude-sonnet-4-5<br/>Add sentiment_score column]
+    B -->|pipe: output| C[CSVDestination<br/>writer<br/>reviews_analyzed.csv]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#BD10E0,stroke:#9012FE,stroke-width:3px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+    
+    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    classDef ai fill:#BD10E0,stroke:#9012FE,stroke-width:3px,color:#fff
+    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
 ### Example 3: Routing with Switcher and BigQuery
@@ -315,6 +345,25 @@ switcher.add_output_pipe(pipe_a).set_destination(bigquery_c)
 
 bq_origin.pump()
 
+```
+
+```mermaid
+graph LR
+    A[GCPBigQueryOrigin<br/>reader<br/>SELECT * FROM dataset.table] -->|pipe: bq_pipe| B{Switcher<br/>router<br/>field: category}
+    
+    B -->|pipe_a<br/>category = A| C[GCPBigQueryDestination<br/>bigquery_a<br/>dataset.table_a<br/>WRITE_TRUNCATE]
+    B -->|pipe_b<br/>category = B| D[GCPBigQueryDestination<br/>bigquery_b<br/>dataset.table_b<br/>WRITE_TRUNCATE]
+    B -->|pipe_c<br/>category = C| E[GCPBigQueryDestination<br/>bigquery_c<br/>dataset.table_c<br/>WRITE_TRUNCATE]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+    style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+    style E fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+    
+    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    classDef router fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
 
