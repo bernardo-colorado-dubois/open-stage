@@ -255,6 +255,68 @@ claude.add_output_pipe(pipe2).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
+### Example 3: Routing with Switcher and BigQuery
+
+```python
+from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
+from src.core.common import Switcher, Funnel, Copy, Aggregator
+from src.core.base import Pipe
+
+# Read from BigQuery
+bq_origin = GCPBigQueryOrigin(
+    name="reader",
+    project_id="my-project",
+    query="SELECT * FROM dataset.table"
+)
+
+bq_pipe = Pipe(name='bq_pipe')
+
+# Split by category
+switcher = Switcher(
+    "router",
+    field="category",
+    mapping={"A": "pipe_a", "B": "pipe_b", "C": "pipe_c"}
+)
+
+# Output pipes for A,B,C
+pipe_a = Pipe(name='pipe_a')
+pipe_b = Pipe(name='pipe_b')
+pipe_c = Pipe(name='pipe_c')
+
+
+bigquery_a = GCPBigQueryDestination(
+    name="bigquery_a",
+    project_id=GCP_PROJECT_ID,
+    dataset="dataset",
+    table="table_a",
+    write_disposition="WRITE_TRUNCATE"
+)
+
+bigquery_b = GCPBigQueryDestination(
+    name="bigquery_b",
+    project_id=GCP_PROJECT_ID,
+    dataset="dataset",
+    table="table_b",
+    write_disposition="WRITE_TRUNCATE"
+)
+
+bigquery_c = GCPBigQueryDestination(
+    name="bigquery_c",
+    project_id=GCP_PROJECT_ID,
+    dataset="dataset",
+    table="table_c",
+    write_disposition="WRITE_TRUNCATE"
+)
+
+bq_origin.add_output_pipe(bq_pipe).set_destination(switcher)
+switcher.add_output_pipe(pipe_a).set_destination(bigquery_a)
+switcher.add_output_pipe(pipe_b).set_destination(bigquery_b)
+switcher.add_output_pipe(pipe_a).set_destination(bigquery_c)
+
+bq_origin.pump()
+
+```
+
 
 
 ## 🔧 Configuration
