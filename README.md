@@ -255,50 +255,7 @@ claude.add_output_pipe(pipe2).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
-### Example 3: Split and Rejoin with BigQuery
 
-```python
-from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
-from src.core.common import Switcher, Funnel, Copy, Aggregator
-from src.core.base import Pipe
-
-# Read from BigQuery
-bq_origin = GCPBigQueryOrigin(
-    name="reader",
-    project_id="my-project",
-    query="SELECT * FROM dataset.table"
-)
-
-# Split by category
-switcher = Switcher(
-    "router",
-    field="category",
-    mapping={"A": "pipe_a", "B": "pipe_b", "C": "pipe_c"}
-)
-
-# Rejoin streams
-funnel = Funnel("combiner")
-
-# Duplicate for parallel processing
-copy = Copy("splitter")
-
-# Aggregate
-aggregator = Aggregator("counter", "category", "count", "count")
-
-# Write to BigQuery
-bq_dest = GCPBigQueryDestination(
-    name="writer",
-    project_id="my-project",
-    dataset="output_dataset",
-    table="results",
-    write_disposition="WRITE_TRUNCATE"
-)
-
-# Connect complex pipeline
-# ... (pipe connections)
-
-bq_origin.pump()
-```
 
 ## 🔧 Configuration
 
