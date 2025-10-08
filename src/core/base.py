@@ -36,30 +36,32 @@ class Pipe:
     data_package = DataPackage(self.name, df)
     self.destination.sink(data_package)
     
-
+# 0 -> 1
 class Origin:
   def __init__(self):
     self.outputs = {}  # Inicializar como variable de instancia
   
   @abstractmethod
-  def add_output_pipe(self, pipe: Pipe) -> None:
-    self.outputs[pipe.get_name()] = pipe
-    pipe.set_origin(self)
-    return pipe
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
+    if len(self.outputs.keys()) == 0:
+      self.outputs[pipe.get_name()] = pipe
+      pipe.set_origin(self)
+      return pipe
   
   @abstractmethod
   def pump(self):
     pass
 
-
+# 1 -> 0
 class Destination:
   def __init__(self):
     self.inputs = {}  # Inicializar como variable de instancia
   
   @abstractmethod
   def add_input_pipe(self, pipe: Pipe) -> None:
-    self.inputs[pipe.get_name()] = pipe
-  
+    if len(self.inputs.keys()) == 0:
+      self.inputs[pipe.get_name()] = pipe
+        
   @abstractmethod
   def sink(self, data_package: DataPackage) -> None:
     pass

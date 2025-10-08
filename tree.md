@@ -1,12 +1,15 @@
 project/
+├── LICENSE                    # MIT License
+├── README.md
+├── requirements.txt
 ├── src/
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── base.py                    # Clases base fundamentales (5 clases)
 │   │   │   ├── DataPackage           # Empaqueta datos + metadatos
 │   │   │   ├── Pipe                  # Conecta componentes
-│   │   │   ├── Origin                # Clase abstracta para fuentes
-│   │   │   ├── Destination           # Clase abstracta para destinos
+│   │   │   ├── Origin                # Clase abstracta para fuentes (0→1)
+│   │   │   ├── Destination           # Clase abstracta para destinos (1→0)
 │   │   │   └── Node                  # Clase abstracta para transformadores
 │   │   └── common.py                  # Componentes genéricos (14 clases)
 │   │       ├── Generator             # Origin: Datos secuenciales
@@ -34,7 +37,11 @@ project/
 │   │   │   └── GCPBigQueryDestination # Destination: BigQuery load
 │   │   └── gemini.py                  # IA Generativa Google (1 clase)
 │   │       └── GeminiPromptTransformer # Node: Gemini transformations
-│   └── anthropic/
+│   ├── anthropic/
+│   │   ├── __init__.py
+│   │   └── claude.py                  # IA Generativa Anthropic (1 clase)
+│   │       └── AnthropicPromptTransformer # Node: Claude transformations
+│   └── deepseek/
 │       ├── __init__.py
-│       └── claude.py                  # IA Generativa Anthropic (1 clase)
-│           └── AnthropicPromptTransformer # Node: Claude transformations
+│       └── deepseek.py                # IA Generativa DeepSeek (1 clase)
+│           └── DeepSeekPromptTransformer # Node: DeepSeek transformations
