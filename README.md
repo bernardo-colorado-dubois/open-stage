@@ -277,11 +277,11 @@ graph LR
     B -->|pipe: output| C[CSVDestination<br/>writer<br/>reviews_analyzed.csv]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#BD10E0,stroke:#9012FE,stroke-width:3px,color:#fff
+    style B fill:#FF6B6B,stroke:#9012FE,stroke-width:3px,color:#fff
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef ai fill:#BD10E0,stroke:#9012FE,stroke-width:3px,color:#fff
+    classDef ai fill:#FF6B6B,stroke:#9012FE,stroke-width:3px,color:#fff
     classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
