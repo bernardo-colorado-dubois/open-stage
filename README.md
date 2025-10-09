@@ -356,13 +356,13 @@ graph LR
     B -->|pipe_c<br/>category = C| E[GCPBigQueryDestination<br/>bigquery_c<br/>dataset.table_c<br/>WRITE_TRUNCATE]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style B fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     style E fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef router fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    classDef router fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
     classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
