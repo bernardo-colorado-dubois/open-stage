@@ -291,7 +291,7 @@ graph LR
 
 ```python
 from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
-from src.core.common import Switcher, Funnel, Copy, Aggregator
+from src.core.common import Switcher
 from src.core.base import Pipe
 
 # Read from BigQuery
