@@ -230,12 +230,12 @@ graph LR
     C -->|pipe: p3| D[CSVDestination<br/>writer<br/>summary.csv]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
-    style C fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C17D11,stroke-width:2px,color:#fff
+    style C fill:#FF6B6B,stroke:#C17D11,stroke-width:2px,color:#fff
     style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef transformer fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    classDef transformer fill:#FF6B6B,stroke:#C17D11,stroke-width:2px,color:#fff
     classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
