@@ -54,27 +54,52 @@ csv_origin.pump()
 
 ```
 project/
-├── LICENSE                    # MIT License
+├── LICENSE                    
 ├── README.md
 ├── requirements.txt
 ├── src/
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── base.py           # Base classes (5)
-│   │   └── common.py         # Generic components (14)
+│   │   ├── base.py                    
+│   │   │   ├── DataPackage           
+│   │   │   ├── Pipe                  
+│   │   │   ├── Origin                
+│   │   │   ├── Destination           
+│   │   │   └── Node                  
+│   │   └── common.py                  
+│   │       ├── Generator             
+│   │       ├── CSVOrigin             
+│   │       ├── APIRestOrigin         
+│   │       ├── Printer               
+│   │       ├── CSVDestination        
+│   │       ├── Funnel                
+│   │       ├── Switcher              
+│   │       ├── Copy                  
+│   │       ├── Filter                
+│   │       ├── Aggregator            
+│   │       ├── DeleteColumns         
+│   │       ├── RemoveDuplicates      
+│   │       ├── Joiner                
+│   │       └── Transformer           
 │   ├── postgres/
 │   │   ├── __init__.py
-│   │   └── common.py         # PostgreSQL connector (1)
+│   │   └── common.py                  
+│   │       └── PostgresOrigin        
 │   ├── google/
 │   │   ├── __init__.py
-│   │   ├── cloud.py          # BigQuery services (2)
-│   │   └── gemini.py         # Gemini AI (1)
+│   │   ├── cloud.py                   
+│   │   │   ├── GCPBigQueryOrigin     
+│   │   │   └── GCPBigQueryDestination 
+│   │   └── gemini.py                  
+│   │       └── GeminiPromptTransformer 
 │   ├── anthropic/
 │   │   ├── __init__.py
-│   │   └── claude.py         # Claude AI (1)
+│   │   └── claude.py                  
+│   │       └── AnthropicPromptTransformer 
 │   └── deepseek/
 │       ├── __init__.py
-│       └── deepseek.py       # DeepSeek AI (1)
+│       └── deepseek.py                
+│           └── DeepSeekPromptTransformer 
 ```
 
 ## 🏗️ Architecture
