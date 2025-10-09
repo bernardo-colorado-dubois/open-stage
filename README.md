@@ -254,7 +254,9 @@ claude = AnthropicPromptTransformer(
     name="sentiment_analyzer",
     model="claude-sonnet-4-5-20250929",
     api_key="your-api-key",
-    prompt="Add a sentiment_score column (positive, negative, neutral) based on the review text",
+    prompt="""Add a sentiment_score 
+    column (positive, negative, neutral) 
+    based on the review text""",
     max_tokens=16000
 )
 
