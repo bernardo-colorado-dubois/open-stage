@@ -10,8 +10,8 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 
 ## ✨ Key Features
 
-- 🧩 **24 Modular Components** (5 base + 19 specialized)
-- 🔌 **Multiple Data Sources**: CSV, PostgreSQL, BigQuery, REST APIs
+- 🧩 **27 Modular Components** (5 base + 22 specialized)
+- 🔌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
 - 🤖 **AI-Powered Transformations**: Claude (Anthropic), Gemini (Google), DeepSeek
 - ✅ **Robust Validations** and intelligent error handling
 - ⛓️ **Method Chaining** for fluent syntax
@@ -84,7 +84,13 @@ project/
 │   ├── postgres/
 │   │   ├── __init__.py
 │   │   └── common.py                  
-│   │       └── PostgresOrigin        
+│   │       ├── PostgresOrigin
+│   │       └── PostgresDestination
+│   ├── mysql/
+│   │   ├── __init__.py
+│   │   └── common.py
+│   │       ├── MySQLOrigin
+│   │       └── MySQLDestination
 │   ├── google/
 │   │   ├── __init__.py
 │   │   ├── cloud.py                   
@@ -179,6 +185,7 @@ classDiagram
 | `Generator` | Generates sequential numeric data |
 | `CSVOrigin` | Reads CSV files |
 | `APIRestOrigin` | Consumes REST APIs |
+| `MySQLOrigin` | Queries MySQL databases |
 | `PostgresOrigin` | Queries PostgreSQL databases |
 | `GCPBigQueryOrigin` | Queries Google BigQuery |
 
@@ -188,6 +195,8 @@ classDiagram
 |-----------|-------------|
 | `Printer` | Displays data to console |
 | `CSVDestination` | Writes CSV files |
+| `MySQLDestination` | Writes data to MySQL |
+| `PostgresDestination` | Writes data to PostgreSQL |
 | `GCPBigQueryDestination` | Loads data to BigQuery |
 
 #### 🟡 Routers - N↔M
@@ -258,10 +267,6 @@ graph LR
     style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
     style C fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
     style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-    
-    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
 ### Example 2: AI-Powered Transformation
@@ -279,9 +284,7 @@ claude = AnthropicPromptTransformer(
     name="sentiment_analyzer",
     model="claude-sonnet-4-5-20250929",
     api_key="your-api-key",
-    prompt="""Add a sentiment_score 
-    column (positive, negative, neutral) 
-    based on the review text""",
+    prompt="Add a sentiment_score column (positive, negative, neutral) based on the review text",
     max_tokens=16000
 )
 
@@ -306,10 +309,6 @@ graph LR
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-    
-    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef ai fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
-    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
 ### Example 3: Routing with Switcher and BigQuery
@@ -340,10 +339,9 @@ pipe_a = Pipe(name='pipe_a')
 pipe_b = Pipe(name='pipe_b')
 pipe_c = Pipe(name='pipe_c')
 
-
 bigquery_a = GCPBigQueryDestination(
     name="bigquery_a",
-    project_id=GCP_PROJECT_ID,
+    project_id="my-project",
     dataset="dataset",
     table="table_a",
     write_disposition="WRITE_TRUNCATE"
@@ -351,7 +349,7 @@ bigquery_a = GCPBigQueryDestination(
 
 bigquery_b = GCPBigQueryDestination(
     name="bigquery_b",
-    project_id=GCP_PROJECT_ID,
+    project_id="my-project",
     dataset="dataset",
     table="table_b",
     write_disposition="WRITE_TRUNCATE"
@@ -359,7 +357,7 @@ bigquery_b = GCPBigQueryDestination(
 
 bigquery_c = GCPBigQueryDestination(
     name="bigquery_c",
-    project_id=GCP_PROJECT_ID,
+    project_id="my-project",
     dataset="dataset",
     table="table_c",
     write_disposition="WRITE_TRUNCATE"
@@ -368,10 +366,9 @@ bigquery_c = GCPBigQueryDestination(
 bq_origin.add_output_pipe(bq_pipe).set_destination(switcher)
 switcher.add_output_pipe(pipe_a).set_destination(bigquery_a)
 switcher.add_output_pipe(pipe_b).set_destination(bigquery_b)
-switcher.add_output_pipe(pipe_a).set_destination(bigquery_c)
+switcher.add_output_pipe(pipe_c).set_destination(bigquery_c)
 
 bq_origin.pump()
-
 ```
 
 ```mermaid
@@ -387,13 +384,230 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
     style E fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-    
-    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    classDef router fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
-    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
+### Example 4: MySQL to PostgreSQL Migration
 
+```python
+from src.mysql.common import MySQLOrigin
+from src.postgres.common import PostgresDestination
+from src.core.common import Filter
+from src.core.base import Pipe
+
+# Read from MySQL
+mysql_origin = MySQLOrigin(
+    name="mysql_reader",
+    host="localhost",
+    database="source_db",
+    user="mysql_user",
+    password="mysql_pass",
+    query="SELECT * FROM customers WHERE active = 1"
+)
+
+# Filter high-value customers
+filter_node = Filter("high_value", "total_purchases", ">", 10000)
+
+# Write to PostgreSQL
+pg_dest = PostgresDestination(
+    name="pg_writer",
+    host="localhost",
+    database="target_db",
+    user="postgres",
+    password="postgres_pass",
+    table="customers",
+    schema="public",
+    if_exists="append"
+)
+
+# Connect pipeline
+pipe1 = Pipe("extract")
+pipe2 = Pipe("load")
+
+mysql_origin.add_output_pipe(pipe1).set_destination(filter_node)
+filter_node.add_output_pipe(pipe2).set_destination(pg_dest)
+
+# Execute
+mysql_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM customers<br/>WHERE active = 1] -->|pipe: extract| B[Filter<br/>high_value<br/>total_purchases > 10000]
+    B -->|pipe: load| C[PostgresDestination<br/>pg_writer<br/>public.customers<br/>if_exists: append]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+### Example 5: PostgreSQL ETL Pipeline
+
+```python
+from src.postgres.common import PostgresOrigin, PostgresDestination
+from src.core.common import Aggregator
+from src.core.base import Pipe
+
+# Read from PostgreSQL
+pg_origin = PostgresOrigin(
+    name="pg_reader",
+    host="localhost",
+    database="analytics_db",
+    user="postgres",
+    password="password",
+    query="""
+        SELECT category, product, amount, date 
+        FROM sales 
+        WHERE date >= '2024-01-01'
+    """
+)
+
+# Aggregate by category
+aggregator = Aggregator(
+    name="summary",
+    key="category",
+    agg_field_name="total_sales",
+    agg_type="sum",
+    field_to_agg="amount"
+)
+
+# Write to PostgreSQL (different schema)
+pg_dest = PostgresDestination(
+    name="pg_writer",
+    host="localhost",
+    database="analytics_db",
+    user="postgres",
+    password="password",
+    table="sales_summary",
+    schema="reports",
+    if_exists="replace"
+)
+
+# Connect pipeline
+pipe1 = Pipe("extract")
+pipe2 = Pipe("load")
+
+pg_origin.add_output_pipe(pipe1).set_destination(aggregator)
+aggregator.add_output_pipe(pipe2).set_destination(pg_dest)
+
+# Execute
+pg_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[PostgresOrigin<br/>pg_reader<br/>SELECT category, product, amount<br/>FROM sales] -->|pipe: extract| B[Aggregator<br/>summary<br/>SUM amount<br/>GROUP BY category]
+    B -->|pipe: load| C[PostgresDestination<br/>pg_writer<br/>reports.sales_summary<br/>if_exists: replace]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+### Example 6: MySQL Query and Export to CSV
+
+```python
+from src.mysql.common import MySQLOrigin
+from src.core.common import CSVDestination
+from src.core.base import Pipe
+
+# Read from MySQL
+mysql_origin = MySQLOrigin(
+    name="mysql_reader",
+    host="localhost",
+    database="company_db",
+    user="root",
+    password="password",
+    query="SELECT * FROM customers WHERE active = 1"
+)
+
+# Write to CSV
+csv_dest = CSVDestination(
+    name="csv_writer",
+    path_or_buf="customers.csv",
+    index=False
+)
+
+# Connect pipeline
+pipe = Pipe("data_pipe")
+
+mysql_origin.add_output_pipe(pipe).set_destination(csv_dest)
+
+# Execute
+mysql_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM customers<br/>WHERE active = 1] -->|pipe: data_pipe| B[CSVDestination<br/>csv_writer<br/>customers.csv]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+### Example 7: MySQL ETL with Filter and Aggregation
+
+```python
+from src.mysql.common import MySQLOrigin, MySQLDestination
+from src.core.common import Filter, Aggregator
+from src.core.base import Pipe
+
+# Read from MySQL
+mysql_origin = MySQLOrigin(
+    name="mysql_reader",
+    host="localhost",
+    database="dulceria",
+    user="root",
+    password="password",
+    query="SELECT * FROM compras WHERE estado = 'pendiente'"
+)
+
+# Filter high-value purchases
+filter_node = Filter("high_value", "total", ">", 1000)
+
+# Aggregate by supplier
+aggregator = Aggregator(
+    name="by_supplier",
+    key="proveedor_id",
+    agg_field_name="total_compras",
+    agg_type="sum",
+    field_to_agg="total"
+)
+
+# Write to MySQL (different table)
+mysql_dest = MySQLDestination(
+    name="mysql_writer",
+    host="localhost",
+    database="dulceria",
+    user="root",
+    password="password",
+    table="compras_importantes",
+    if_exists="append"
+)
+
+# Connect pipeline
+pipe1 = Pipe("extract")
+pipe2 = Pipe("transform")
+pipe3 = Pipe("load")
+
+mysql_origin.add_output_pipe(pipe1).set_destination(filter_node)
+filter_node.add_output_pipe(pipe2).set_destination(aggregator)
+aggregator.add_output_pipe(pipe3).set_destination(mysql_dest)
+
+# Execute
+mysql_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM compras] -->|pipe: extract| B[Filter<br/>high_value<br/>total > 1000]
+    B -->|pipe: transform| C[Aggregator<br/>by_supplier<br/>SUM total<br/>GROUP BY proveedor_id]
+    C -->|pipe: load| D[MySQLDestination<br/>mysql_writer<br/>compras_importantes<br/>if_exists: append]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style C fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
 
 ## 🔧 Configuration
 
@@ -404,6 +618,7 @@ pandas>=1.3.0
 requests>=2.25.0
 sqlalchemy>=1.4.0
 psycopg2-binary>=2.9.0
+pymysql>=1.0.0
 google-cloud-bigquery>=3.0.0
 google-auth>=2.0.0
 db-dtypes>=1.0.0
@@ -411,7 +626,6 @@ anthropic>=0.18.0
 google-generativeai>=0.3.0
 openai>=1.0.0
 ```
-
 
 ## 🎯 Design Principles
 
@@ -464,14 +678,17 @@ Contributions are welcome! To contribute:
 ### Potential Components
 
 #### Origins
-- MySQL/MariaDB, MongoDB, Kafka Consumer
-- S3 (AWS), Azure Blob Storage, Snowflake
-- Excel, Parquet, JSON, XML, SFTP
+- ✅ MySQL (completed)
+- [ ] MariaDB, MongoDB, Kafka Consumer
+- [ ] S3 (AWS), Azure Blob Storage, Snowflake
+- [ ] Excel, Parquet, JSON, XML, SFTP
 
 #### Destinations
-- MySQL/MariaDB, MongoDB, Kafka Producer
-- S3 (AWS), Azure Blob Storage, Snowflake
-- Excel, Parquet, JSON, XML, SFTP
+- ✅ MySQL (completed)
+- ✅ PostgreSQL (completed)
+- [ ] MariaDB, MongoDB, Kafka Producer
+- [ ] S3 (AWS), Azure Blob Storage, Snowflake
+- [ ] Excel, Parquet, JSON, XML, SFTP
 
 #### Transformers
 - Sort, Pivot, Unpivot, Window Functions
