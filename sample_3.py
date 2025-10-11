@@ -21,7 +21,15 @@ postgres_origin = PostgresOrigin(
   database=PSQL_DB_NAME,
   user=PSQL_DB_USER,
   password=PSQL_DB_PASSWORD,
-  query="select * FROM rocket.jira_issues;"
+  query="""
+    SELECT id, 
+      nombre, 
+      descripcion, 
+      activo, 
+      created_at, 
+      updated_at 
+    FROM public.categorias;
+  """
 )
 
 postgres_pipe = Pipe(name="postgres_pipe")
