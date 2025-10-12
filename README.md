@@ -126,9 +126,9 @@ Open-Stage is built on 5 fundamental classes:
 classDiagram
     class DataPackage {
         -string pipe_name
-        -DataFrame df
+        -pd.DataFrame df
         +get_pipe_name() string
-        +get_df() DataFrame
+        +get_df() pd.DataFrame
     }
     
     class Pipe {
@@ -138,7 +138,7 @@ classDiagram
         +get_name() string
         +set_origin(origin)
         +set_destination(destination)
-        +flow(df DataFrame)
+        +flow(df pd.DataFrame)
     }
     
     class Origin {
