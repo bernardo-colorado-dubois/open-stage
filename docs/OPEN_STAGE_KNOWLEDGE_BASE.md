@@ -1,5 +1,5 @@
 # Open-Stage - Complete Knowledge Base
-## Version 2.1 - January 2025
+## Version 2.2 - January 2025
 
 ---
 
@@ -8,15 +8,16 @@
 **Open-Stage** is an enterprise-grade ETL (Extract, Transform, Load) platform built in Python, inspired by IBM DataStage. It implements a pipes and filters architecture that enables the creation of modular, scalable data processing pipelines with multi-model generative AI capabilities.
 
 ## Key Statistics
-- **Total Components**: 27 (5 base + 22 specialized)
+- **Total Components**: 28 (5 base + 23 specialized)
 - **License**: MIT
 - **Authors**: Bernardo Colorado Dubois, Saul Hernandez Cordova
 - **Python Version**: 3.8+
-- **Current Version**: 2.1
+- **Current Version**: 2.2
+- **Code Style**: 2-space indentation
 
 ## Core Features
-- 27 Modular Components (5 base + 22 specialized)
-- Multiple Data Sources: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
+- 28 Modular Components (5 base + 23 specialized)
+- Multiple Data Sources: CSV, MySQL, PostgreSQL, BigQuery, REST APIs, In-Memory DataFrames
 - AI-Powered Transformations: Claude (Anthropic), Gemini (Google), DeepSeek
 - Robust Validations and intelligent error handling
 - Method Chaining for fluent syntax
@@ -40,10 +41,11 @@ project/
 │   │   │   ├── Origin                # Abstract class for sources (0→1)
 │   │   │   ├── Destination           # Abstract class for sinks (1→0)
 │   │   │   └── Node                  # Abstract class for transformers
-│   │   └── common.py                  # Generic components (14)
+│   │   └── common.py                  # Generic components (15)
 │   │       ├── Generator             # Origin: Sequential data
 │   │       ├── CSVOrigin             # Origin: CSV files
 │   │       ├── APIRestOrigin         # Origin: REST APIs
+│   │       ├── OpenOrigin            # Origin: In-memory DataFrames
 │   │       ├── Printer               # Destination: Console output
 │   │       ├── CSVDestination        # Destination: CSV files
 │   │       ├── Funnel                # Node/Router: N→1 combine
@@ -86,7 +88,7 @@ project/
 
 ### Core Module (`src/core/`)
 - **base.py**: Contains the 5 fundamental base classes (DataPackage, Pipe, Origin, Destination, Node)
-- **common.py**: Contains generic components that don't require external dependencies (14 components)
+- **common.py**: Contains generic components that don't require external dependencies (15 components)
 
 ### Database Modules
 - **Pattern**: `src/{database_name}/common.py`
@@ -126,15 +128,15 @@ project/
 
 ```python
 class DataPackage:
-    def __init__(self, pipe_name: str, df: DataFrame):
-        self.pipe_name = pipe_name
-        self.df = df
-    
-    def get_pipe_name(self) -> str:
-        return self.pipe_name
-    
-    def get_df(self) -> DataFrame:
-        return self.df
+  def __init__(self, pipe_name: str, df: pd.DataFrame) -> None:
+    self.pipe_name = pipe_name
+    self.df = df
+  
+  def get_pipe_name(self) -> str:
+    return self.pipe_name
+  
+  def get_df(self) -> pd.DataFrame:
+    return self.df
 ```
 
 ### 2. Pipe
@@ -142,20 +144,20 @@ class DataPackage:
 
 ```python
 class Pipe:
-    def __init__(self, name: str):
-        self.name = name
-        self.origin = None
-        self.destination = None
-    
-    def set_destination(self, destination):
-        self.destination = destination
-        self.destination.add_input_pipe(self)
-        if isinstance(destination, Node):
-            return destination  # Enables method chaining
-    
-    def flow(self, df: DataFrame):
-        data_package = DataPackage(self.name, df)
-        self.destination.sink(data_package)
+  def __init__(self, name: str) -> None:
+    self.name = name
+    self.origin = None
+    self.destination = None
+  
+  def set_destination(self, destination):
+    self.destination = destination
+    self.destination.add_input_pipe(self)
+    if isinstance(destination, Node):
+      return destination  # Enables method chaining
+  
+  def flow(self, df: pd.DataFrame) -> None:
+    data_package = DataPackage(self.name, df)
+    self.destination.sink(data_package)
 ```
 
 ### 3. Origin (Abstract Class)
@@ -163,19 +165,19 @@ class Pipe:
 
 ```python
 class Origin:
-    def __init__(self):
-        self.outputs = {}
-    
-    @abstractmethod
-    def add_output_pipe(self, pipe: Pipe) -> Pipe:
-        if len(self.outputs.keys()) == 0:
-            self.outputs[pipe.get_name()] = pipe
-            pipe.set_origin(self)
-            return pipe
-    
-    @abstractmethod
-    def pump(self):
-        pass
+  def __init__(self):
+    self.outputs = {}
+  
+  @abstractmethod
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
+    if len(self.outputs.keys()) == 0:
+      self.outputs[pipe.get_name()] = pipe
+      pipe.set_origin(self)
+      return pipe
+  
+  @abstractmethod
+  def pump(self):
+    pass
 ```
 
 ### 4. Destination (Abstract Class)
@@ -183,17 +185,17 @@ class Origin:
 
 ```python
 class Destination:
-    def __init__(self):
-        self.inputs = {}
-    
-    @abstractmethod
-    def add_input_pipe(self, pipe: Pipe) -> None:
-        if len(self.inputs.keys()) == 0:
-            self.inputs[pipe.get_name()] = pipe
-    
-    @abstractmethod
-    def sink(self, data_package: DataPackage) -> None:
-        pass
+  def __init__(self):
+    self.inputs = {}
+  
+  @abstractmethod
+  def add_input_pipe(self, pipe: Pipe) -> None:
+    if len(self.inputs.keys()) == 0:
+      self.inputs[pipe.get_name()] = pipe
+  
+  @abstractmethod
+  def sink(self, data_package: DataPackage) -> None:
+    pass
 ```
 
 ### 5. Node (Abstract Class)
@@ -201,9 +203,9 @@ class Destination:
 
 ```python
 class Node(Origin, Destination):
-    def __init__(self):
-        Origin.__init__(self)
-        Destination.__init__(self)
+  def __init__(self):
+    Origin.__init__(self)
+    Destination.__init__(self)
 ```
 
 ---
@@ -230,6 +232,36 @@ gen.pump()
 
 ---
 
+### OpenOrigin
+**Module**: `src/core/common.py`
+**Purpose**: Accepts a pandas DataFrame directly for in-memory processing.
+
+**Parameters**:
+- `name`: str - Component name
+- `df`: pd.DataFrame - Pandas DataFrame to use as data source
+
+**Example**:
+```python
+import pandas as pd
+
+data = {'id': [1, 2, 3], 'name': ['Alice', 'Bob', 'Charlie']}
+df = pd.DataFrame(data)
+
+origin = OpenOrigin(name="my_data", df=df)
+pipe = Pipe("pipe1")
+origin.add_output_pipe(pipe).set_destination(destination)
+origin.pump()
+```
+
+**Use Cases**:
+- Testing pipelines quickly
+- Processing data already loaded in memory
+- Prototyping and proof of concepts
+- Working with data from APIs or custom sources
+- Jupyter notebooks and interactive analysis
+
+---
+
 ### CSVOrigin
 **Module**: `src/core/common.py`
 **Purpose**: Reads CSV files using pandas.
@@ -241,10 +273,10 @@ gen.pump()
 **Example**:
 ```python
 csv = CSVOrigin(
-    name="reader",
-    filepath_or_buffer="data.csv",
-    sep=",",
-    encoding="utf-8"
+  name="reader",
+  filepath_or_buffer="data.csv",
+  sep=",",
+  encoding="utf-8"
 )
 ```
 
@@ -263,12 +295,12 @@ csv = CSVOrigin(
 **Example**:
 ```python
 api = APIRestOrigin(
-    name="api_reader",
-    path="data.users",
-    fields=["id", "name"],
-    url="https://api.example.com/users",
-    method="GET",
-    headers={"Authorization": "Bearer token"}
+  name="api_reader",
+  path="data.users",
+  fields=["id", "name"],
+  url="https://api.example.com/users",
+  method="GET",
+  headers={"Authorization": "Bearer token"}
 )
 ```
 
@@ -294,12 +326,12 @@ api = APIRestOrigin(
 **Example**:
 ```python
 mysql = MySQLOrigin(
-    name="mysql_reader",
-    host="localhost",
-    database="company_db",
-    user="root",
-    password="password",
-    query="SELECT * FROM customers WHERE active = 1"
+  name="mysql_reader",
+  host="localhost",
+  database="company_db",
+  user="root",
+  password="password",
+  query="SELECT * FROM customers WHERE active = 1"
 )
 ```
 
@@ -335,12 +367,12 @@ mysql = MySQLOrigin(
 **Example**:
 ```python
 pg = PostgresOrigin(
-    name="pg_reader",
-    host="localhost",
-    database="analytics_db",
-    user="postgres",
-    password="password",
-    query="SELECT * FROM sales WHERE date >= '2024-01-01'"
+  name="pg_reader",
+  host="localhost",
+  database="analytics_db",
+  user="postgres",
+  password="password",
+  query="SELECT * FROM sales WHERE date >= '2024-01-01'"
 )
 ```
 
@@ -361,10 +393,10 @@ pg = PostgresOrigin(
 **Example**:
 ```python
 bq = GCPBigQueryOrigin(
-    name="bq_reader",
-    project_id="my-project",
-    query="SELECT * FROM `dataset.table` LIMIT 1000",
-    credentials_path="/path/to/credentials.json"
+  name="bq_reader",
+  project_id="my-project",
+  query="SELECT * FROM `dataset.table` LIMIT 1000",
+  credentials_path="/path/to/credentials.json"
 )
 ```
 
@@ -398,10 +430,10 @@ pipe.set_destination(printer)
 **Example**:
 ```python
 csv_dest = CSVDestination(
-    name="writer",
-    path_or_buf="output.csv",
-    index=False,
-    sep=";"
+  name="writer",
+  path_or_buf="output.csv",
+  index=False,
+  sep=";"
 )
 ```
 
@@ -431,13 +463,13 @@ csv_dest = CSVDestination(
 **Example**:
 ```python
 mysql_dest = MySQLDestination(
-    name="mysql_writer",
-    host="localhost",
-    database="dulceria",
-    user="root",
-    password="password",
-    table="compras_importantes",
-    if_exists="append"
+  name="mysql_writer",
+  host="localhost",
+  database="dulceria",
+  user="root",
+  password="password",
+  table="compras_importantes",
+  if_exists="append"
 )
 ```
 
@@ -469,14 +501,14 @@ mysql_dest = MySQLDestination(
 **Example**:
 ```python
 pg_dest = PostgresDestination(
-    name="pg_writer",
-    host="localhost",
-    database="analytics_db",
-    user="postgres",
-    password="password",
-    table="sales_summary",
-    schema="reports",
-    if_exists="replace"
+  name="pg_writer",
+  host="localhost",
+  database="analytics_db",
+  user="postgres",
+  password="password",
+  table="sales_summary",
+  schema="reports",
+  if_exists="replace"
 )
 ```
 
@@ -509,11 +541,11 @@ pg_dest = PostgresDestination(
 **Example**:
 ```python
 bq_dest = GCPBigQueryDestination(
-    name="bq_writer",
-    project_id="my-project",
-    dataset="my_dataset",
-    table="my_table",
-    write_disposition="WRITE_TRUNCATE"
+  name="bq_writer",
+  project_id="my-project",
+  dataset="my_dataset",
+  table="my_table",
+  write_disposition="WRITE_TRUNCATE"
 )
 ```
 
@@ -559,14 +591,14 @@ funnel.add_output_pipe(output_pipe)
 **Example**:
 ```python
 switcher = Switcher(
-    "router",
-    field="category",
-    mapping={
-        "A": "pipe_a",
-        "B": "pipe_b",
-        "C": "pipe_c"
-    },
-    fail_on_unmatch=True
+  "router",
+  field="category",
+  mapping={
+    "A": "pipe_a",
+    "B": "pipe_b",
+    "C": "pipe_c"
+  },
+  fail_on_unmatch=True
 )
 ```
 
@@ -675,11 +707,11 @@ DeleteColumns("cleanup", ["temp_col", "id", "unused"])
 **Example**:
 ```python
 RemoveDuplicates(
-    name="dedup",
-    key="user_id",
-    sort_by="timestamp",
-    orientation="DESC",
-    retain="FIRST"  # Keeps most recent
+  name="dedup",
+  key="user_id",
+  sort_by="timestamp",
+  orientation="DESC",
+  retain="FIRST"  # Keeps most recent
 )
 ```
 
@@ -707,11 +739,11 @@ RemoveDuplicates(
 **Example**:
 ```python
 joiner = Joiner(
-    name="join_users_orders",
-    left="users_pipe",
-    right="orders_pipe",
-    key="user_id",
-    join_type="left"
+  name="join_users_orders",
+  left="users_pipe",
+  right="orders_pipe",
+  key="user_id",
+  join_type="left"
 )
 ```
 
@@ -728,8 +760,8 @@ joiner = Joiner(
 **Example**:
 ```python
 def my_transform(df):
-    df['total'] = df['price'] * df['quantity']
-    return df
+  df['total'] = df['price'] * df['quantity']
+  return df
 
 Transformer("calculator", my_transform)
 ```
@@ -758,11 +790,11 @@ Transformer("calculator", my_transform)
 **Example**:
 ```python
 claude = AnthropicPromptTransformer(
-    name="sentiment_analyzer",
-    model="claude-sonnet-4-5-20250929",
-    api_key="sk-ant-...",
-    prompt="Add a sentiment_score column (positive, negative, neutral)",
-    max_tokens=16000
+  name="sentiment_analyzer",
+  model="claude-sonnet-4-5-20250929",
+  api_key="sk-ant-...",
+  prompt="Add a sentiment_score column (positive, negative, neutral)",
+  max_tokens=16000
 )
 ```
 
@@ -787,23 +819,23 @@ claude = AnthropicPromptTransformer(
 - `prompt`: str - Transformation instructions
 - `max_tokens`: int = 16000 - Max output tokens
 
-**Popular models**: `gemini-2.5-flash`
+**Popular models**: `gemini-2.0-flash-exp`
 
 **Example**:
 ```python
 gemini = GeminiPromptTransformer(
-    name="ai_cleaner",
-    model="gemini-2.5-flash",
-    api_key="...",
-    prompt="Standardize names to Title Case",
-    max_tokens=16000
+  name="ai_cleaner",
+  model="gemini-2.0-flash-exp",
+  api_key="...",
+  prompt="Standardize names to Title Case",
+  max_tokens=16000
 )
 ```
 
 **Features**:
 - CSV format
 - temperature=0.0 for adherence
-- system_instruction support
+- system_instruction support (passed to GenerativeModel constructor)
 
 ---
 
@@ -827,11 +859,11 @@ gemini = GeminiPromptTransformer(
 **Example**:
 ```python
 deepseek = DeepSeekPromptTransformer(
-    name="ai_enricher",
-    model="deepseek-chat",
-    api_key="sk-...",
-    prompt="Add sentiment analysis",
-    max_tokens=8192
+  name="ai_enricher",
+  model="deepseek-chat",
+  api_key="sk-...",
+  prompt="Add sentiment analysis",
+  max_tokens=8192
 )
 ```
 
@@ -867,6 +899,7 @@ deepseek = DeepSeekPromptTransformer(
 6. **Lazy Initialization**: External clients initialized on demand
 7. **Immediate Processing**: `sink()` automatically calls `pump()`
 8. **Resource Cleanup**: DataFrames cleaned post-processing, connections closed appropriately
+9. **2-Space Indentation**: Consistent code style throughout the project
 
 ---
 
@@ -904,7 +937,22 @@ transform.add_output_pipe(pipe2).set_destination(destination)
 origin.pump()
 ```
 
-## Pattern 2: Database Migration
+## Pattern 2: In-Memory Processing
+```python
+import pandas as pd
+
+df = pd.DataFrame({'id': [1, 2, 3], 'value': [10, 20, 30]})
+
+origin = OpenOrigin("memory_data", df=df)
+printer = Printer("output")
+
+pipe = Pipe("p1")
+origin.add_output_pipe(pipe).set_destination(printer)
+
+origin.pump()
+```
+
+## Pattern 3: Database Migration
 ```python
 mysql_origin = MySQLOrigin("source", host="...", database="...", user="...", password="...", query="...")
 pg_dest = PostgresDestination("target", host="...", database="...", user="...", password="...", table="...", schema="public")
@@ -914,7 +962,7 @@ mysql_origin.add_output_pipe(pipe).set_destination(pg_dest)
 mysql_origin.pump()
 ```
 
-## Pattern 3: AI Transformation
+## Pattern 4: AI Transformation
 ```python
 csv_origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
 ai_transform = AnthropicPromptTransformer("ai", model="claude-sonnet-4-5-20250929", api_key="...", prompt="...")
@@ -928,7 +976,7 @@ ai_transform.add_output_pipe(pipe2).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
-## Pattern 4: Split and Combine
+## Pattern 5: Split and Combine
 ```python
 origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
 switcher = Switcher("split", field="category", mapping={"A": "pa", "B": "pb"})
@@ -956,14 +1004,53 @@ Use these colors consistently in all diagrams:
 - **Routers** (🟡): `fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff`
 - **Destinations** (🟢): `fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff`
 
+## Mermaid Example
+
+```mermaid
+flowchart LR
+    Origin[CSV Origin]:::origin
+    Transform[Filter]:::transformer
+    Router[Copy]:::router
+    Dest[MySQL Destination]:::destination
+    
+    Origin --> Transform
+    Transform --> Router
+    Router --> Dest
+    
+    classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    classDef router fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    classDef destination fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+## Color Reference Table
+
+| Component Type | Color Name | Hex Code | RGB | Usage |
+|----------------|-----------|----------|-----|-------|
+| **Origins** | Blue | `#4A90E2` | `rgb(74, 144, 226)` | Data sources (CSV, MySQL, API, etc.) |
+| **Transformers** | Red | `#FF6B6B` | `rgb(255, 107, 107)` | Data transformations (Filter, Aggregator, etc.) |
+| **Routers** | Orange | `#F5A623` | `rgb(245, 166, 35)` | Flow control (Funnel, Switcher, Copy) |
+| **Destinations** | Green | `#7ED321` | `rgb(126, 211, 33)` | Data sinks (MySQL, PostgreSQL, CSV, etc.) |
+
+## Border Colors
+
+| Component Type | Stroke Color | Hex Code | RGB |
+|----------------|-------------|----------|-----|
+| **Origins** | Dark Blue | `#2E5C8A` | `rgb(46, 92, 138)` |
+| **Transformers** | Dark Red | `#C92A2A` | `rgb(201, 42, 42)` |
+| **Routers** | Dark Orange | `#C17D11` | `rgb(193, 125, 17)` |
+| **Destinations** | Dark Green | `#5FA319` | `rgb(95, 163, 25)` |
+
 ---
 
 # ROADMAP
 
 ## Completed (✅)
 - MySQL Origin and Destination
-- PostgreSQL Destination
-- 27 total components
+- PostgreSQL Origin and Destination
+- BigQuery Origin and Destination
+- OpenOrigin for in-memory DataFrames
+- 28 total components
 
 ## Pending AI Providers
 - [ ] OpenAI Transformer (GPT-4, GPT-4 Turbo, GPT-4o)
@@ -1014,6 +1101,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 # NOTES FOR FUTURE DEVELOPMENT
 
+## Code Style Guidelines
+- **Indentation**: Always use 2 spaces (no tabs)
+- **Type Hints**: Use `pd.DataFrame` instead of importing `DataFrame` separately
+- **Imports**: Import pandas as `import pandas as pd`
+- **Consistency**: Follow existing patterns in base classes
+
 ## When creating new Origins:
 1. Inherit from `Origin` class
 2. Use default 0→1 connectivity (no override needed for simple cases)
@@ -1021,6 +1114,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 4. Implement `pump()` method
 5. Add comprehensive error handling
 6. Close connections in `finally` block
+7. Use 2-space indentation
 
 ## When creating new Destinations:
 1. Inherit from `Destination` class
@@ -1029,6 +1123,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 4. Implement `sink()` method
 5. Add comprehensive error handling
 6. Close connections in `finally` block
+7. Use 2-space indentation
 
 ## When creating new Transformers (1→1):
 1. Inherit from `Node` class
@@ -1036,11 +1131,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 3. Store received DataFrame in `self.received_df`
 4. Call `self.pump()` at end of `sink()`
 5. Clear `self.received_df = None` after processing
+6. Use 2-space indentation
 
-## When creating new Routers (N→M):
+## When creating new Routers (N↔M):
 1. Inherit from `Node` class
 2. Override `add_input_pipe()` and/or `add_output_pipe()` as needed
 3. Implement custom routing logic in `pump()`
+4. Use 2-space indentation
 
 ## File Organization:
 - Core components: `src/core/`

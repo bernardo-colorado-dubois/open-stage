@@ -1049,6 +1049,106 @@ class RemoveDuplicates(Node):
     self.received_df = None
     
 
-
- 
- 
+class OpenOrigin(Origin):
+  """
+  OpenOrigin - Simple DataFrame Origin
+  ====================================
+  A simple origin that accepts a pandas DataFrame directly.
+  Useful for testing, in-memory data processing, or starting pipelines
+  with data already loaded in memory.
+  
+  Connectivity: 0 → 1 (inherits from Origin)
+  
+  Parameters
+  ----------
+  name : str
+    Component name
+  df : pd.DataFrame
+    Pandas DataFrame to be used as data source
+  
+  Example
+  -------
+  >>> import pandas as pd
+  >>> from src.core.common import OpenOrigin, Printer, Pipe
+  >>> 
+  >>> # Create a DataFrame
+  >>> data = {
+  >>>   'id': [1, 2, 3],
+  >>>   'name': ['Alice', 'Bob', 'Charlie'],
+  >>>   'age': [25, 30, 35]
+  >>> }
+  >>> df = pd.DataFrame(data)
+  >>> 
+  >>> # Create OpenOrigin with the DataFrame
+  >>> origin = OpenOrigin(name="my_data", df=df)
+  >>> 
+  >>> # Connect to pipeline
+  >>> pipe = Pipe("pipe1")
+  >>> printer = Printer("output")
+  >>> 
+  >>> origin.add_output_pipe(pipe).set_destination(printer)
+  >>> origin.pump()
+  """
+  
+  def __init__(self, name: str, df: pd.DataFrame):
+    super().__init__()
+    self.name = name
+    self.df = df
+    
+    # Validate that df is not None
+    if df is None:
+      raise ValueError(f"OpenOrigin '{self.name}': df cannot be None")
+    
+    # Validate that df is a pandas DataFrame
+    if not isinstance(df, pd.DataFrame):
+      raise ValueError(f"OpenOrigin '{self.name}': df must be a pandas DataFrame, got {type(df)}")
+    
+    # Validate that DataFrame is not empty
+    if df.empty:
+      raise ValueError(f"OpenOrigin '{self.name}': df cannot be empty")
+  
+  def add_output_pipe(self, pipe: Pipe) -> Pipe:
+    """
+    Add output pipe (only 1 allowed by default)
+    
+    Parameters
+    ----------
+    pipe : Pipe
+      Output pipe to connect
+      
+    Returns
+    -------
+    Pipe
+      The connected pipe (enables method chaining)
+    """
+    # Only allow 1 output
+    if len(self.outputs.keys()) == 0:
+      self.outputs[pipe.get_name()] = pipe
+      pipe.set_origin(self)
+      return pipe
+    else:
+      raise ValueError(f"OpenOrigin '{self.name}' can only have 1 output")
+  
+  def pump(self) -> None:
+    """
+    Pump the DataFrame through the output pipe
+    """
+    try:
+      print(f"OpenOrigin '{self.name}' starting to pump data...")
+      print(f"  - DataFrame shape: {self.df.shape}")
+      print(f"  - Rows: {len(self.df)}")
+      print(f"  - Columns: {len(self.df.columns)}")
+      print(f"  - Column names: {list(self.df.columns)}")
+      
+      # Verify that we have an output pipe configured
+      if len(self.outputs) > 0:
+        output_pipe = list(self.outputs.values())[0]
+        output_pipe.flow(self.df)
+        print(f"OpenOrigin '{self.name}' pumped data through pipe '{output_pipe.get_name()}'")
+      else:
+        print(f"Warning: OpenOrigin '{self.name}' has no output pipe configured")
+        
+    except Exception as e:
+      print(f"Error: OpenOrigin '{self.name}' failed to pump data: {str(e)}")
+      print(f"DataFrame shape: {self.df.shape}")
+      raise
