@@ -20,22 +20,13 @@ flowchart LR
     MySQL[MySQL: Online Sales]:::origin
     API[API: Marketplace Sales]:::origin
     
-    CSV --> P1[Pipe: CSV]
-    MySQL --> P2[Pipe: MySQL]
-    API --> P3[Pipe: API]
+    CSV --> Funnel[Funnel: Consolidator]:::router
+    MySQL --> Funnel
+    API --> Funnel
     
-    P1 --> Funnel[Funnel: Consolidator]:::router
-    P2 --> Funnel
-    P3 --> Funnel
-    
-    Funnel --> P4[Pipe: Consolidated]
-    P4 --> Filter[Filter: High Value >$100]:::transformer
-    
-    Filter --> P5[Pipe: Filtered]
-    P5 --> Agg[Aggregator: By Product]:::transformer
-    
-    Agg --> P6[Pipe: Aggregated]
-    P6 --> PG[PostgreSQL: Analytics]:::destination
+    Funnel --> Filter[Filter: High Value >$100]:::transformer
+    Filter --> Agg[Aggregator: By Product]:::transformer
+    Agg --> PG[PostgreSQL: Analytics]:::destination
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
@@ -218,25 +209,16 @@ Bank transaction processing system by category (premium, standard, budget).
 ```mermaid
 flowchart TD
     BQ[BigQuery: Transactions]:::origin
-    BQ --> P1[Pipe: Input]
     
-    P1 --> SW[Switcher: Segment Router]:::router
+    BQ --> SW[Switcher: Segment Router]:::router
     
-    SW -->|Premium| P2[Pipe: Premium]
-    SW -->|Standard| P3[Pipe: Standard]
-    SW -->|Budget| P4[Pipe: Budget]
+    SW -->|Premium| F1[Filter: >= $10,000]:::transformer
+    SW -->|Standard| F2[Filter: $1,000-$9,999]:::transformer
+    SW -->|Budget| F3[Filter: < $1,000]:::transformer
     
-    P2 --> F1[Filter: >= $10,000]:::transformer
-    P3 --> F2[Filter: $1,000-$9,999]:::transformer
-    P4 --> F3[Filter: < $1,000]:::transformer
-    
-    F1 --> P5[Pipe: Premium Filtered]
-    F2 --> P6[Pipe: Standard Filtered]
-    F3 --> P7[Pipe: Budget Filtered]
-    
-    P5 --> D1[MySQL: Premium DB]:::destination
-    P6 --> D2[PostgreSQL: Standard DB]:::destination
-    P7 --> D3[CSV: Budget Export]:::destination
+    F1 --> D1[MySQL: Premium DB]:::destination
+    F2 --> D2[PostgreSQL: Standard DB]:::destination
+    F3 --> D3[CSV: Budget Export]:::destination
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
@@ -423,28 +405,18 @@ Customer feedback analysis and prioritization system using multiple AI models.
 ```mermaid
 flowchart TD
     PG[PostgreSQL: Feedback]:::origin
-    PG --> P1[Pipe: Origin]
     
-    P1 --> Copy[Copy: Duplicator]:::router
+    PG --> Copy[Copy: Duplicator]:::router
     
-    Copy --> P2[Pipe: To Claude]
-    Copy --> P3[Pipe: To Gemini]
-    Copy --> P4[Pipe: To DeepSeek]
+    Copy --> Claude[Claude: Sentiment]:::transformer
+    Copy --> Gemini[Gemini: Category]:::transformer
+    Copy --> DeepSeek[DeepSeek: Priority]:::transformer
     
-    P2 --> Claude[Claude: Sentiment]:::transformer
-    P3 --> Gemini[Gemini: Category]:::transformer
-    P4 --> DeepSeek[DeepSeek: Priority]:::transformer
+    Claude --> Funnel[Funnel: AI Results]:::router
+    Gemini --> Funnel
+    DeepSeek --> Funnel
     
-    Claude --> P5[Pipe: Claude Out]
-    Gemini --> P6[Pipe: Gemini Out]
-    DeepSeek --> P7[Pipe: DeepSeek Out]
-    
-    P5 --> Funnel[Funnel: AI Results]:::router
-    P6 --> Funnel
-    P7 --> Funnel
-    
-    Funnel --> P8[Pipe: Consolidated]
-    P8 --> BQ[BigQuery: Enriched Data]:::destination
+    Funnel --> BQ[BigQuery: Enriched Data]:::destination
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
@@ -643,21 +615,12 @@ Customer database consolidation and cleaning.
 ```mermaid
 flowchart LR
     CSV[CSV: Raw Customers]:::origin
-    CSV --> P1[Pipe: Raw]
     
-    P1 --> F1[Filter: Valid Emails]:::transformer
-    F1 --> P2[Pipe: Valid]
-    
-    P2 --> RD[RemoveDuplicates: By Email]:::transformer
-    RD --> P3[Pipe: Unique]
-    
-    P3 --> DC[DeleteColumns: Sensitive]:::transformer
-    DC --> P4[Pipe: Clean]
-    
-    P4 --> TR[Transformer: Standardize]:::transformer
-    TR --> P5[Pipe: Standardized]
-    
-    P5 --> MySQL[MySQL: Clean DB]:::destination
+    CSV --> F1[Filter: Valid Emails]:::transformer
+    F1 --> RD[RemoveDuplicates: By Email]:::transformer
+    RD --> DC[DeleteColumns: Sensitive]:::transformer
+    DC --> TR[Transformer: Standardize]:::transformer
+    TR --> MySQL[MySQL: Clean DB]:::destination
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
@@ -853,29 +816,15 @@ flowchart TD
     MySQL[MySQL: Products]:::origin
     PG[PostgreSQL: Sales]:::origin
     
-    MySQL --> P1[Pipe: Products]
-    PG --> P2[Pipe: Sales]
+    MySQL --> J[Joiner: Products + Sales]:::transformer
+    PG --> J
     
-    P1 --> J[Joiner: Products + Sales]:::transformer
-    P2 --> J
-    
-    J --> P3[Pipe: Joined]
-    P3 --> F[Filter: Categories]:::transformer
-    
-    F --> P4[Pipe: Filtered]
-    P4 --> T1[Transformer: Metrics]:::transformer
-    
-    T1 --> P5[Pipe: With Metrics]
-    P5 --> T2[Transformer: Prep Agg]:::transformer
-    
-    T2 --> P6[Pipe: Prepped]
-    P6 --> A[Aggregator: By Region-Category]:::transformer
-    
-    A --> P7[Pipe: Aggregated]
-    P7 --> T3[Transformer: Final Format]:::transformer
-    
-    T3 --> P8[Pipe: Final]
-    P8 --> BQ[BigQuery: Dashboard]:::destination
+    J --> F[Filter: Categories]:::transformer
+    F --> T1[Transformer: Metrics]:::transformer
+    T1 --> T2[Transformer: Prep Agg]:::transformer
+    T2 --> A[Aggregator: By Region-Category]:::transformer
+    A --> T3[Transformer: Final Format]:::transformer
+    T3 --> BQ[BigQuery: Dashboard]:::destination
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     classDef transformer fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
@@ -1154,68 +1103,43 @@ flowchart TB
     end
     
     subgraph Consolidation["Phase 1: Consolidation"]
-        CSV --> P1[Pipe 1]
-        MySQL --> P2[Pipe 2]
-        BQ --> P3[Pipe 3]
+        CSV --> Funnel[Funnel: Consolidator]:::router
+        MySQL --> Funnel
+        BQ --> Funnel
         
-        P1 --> Funnel[Funnel: Consolidator]:::router
-        P2 --> Funnel
-        P3 --> Funnel
-        
-        Funnel --> P4[Pipe: Consolidated]
-        P4 --> Copy[Copy: Duplicator]:::router
+        Funnel --> Copy[Copy: Duplicator]:::router
     end
     
-    subgraph AIBranch["Phase 2: AI Enrichment Branch"]
-        Copy --> P5[Pipe: To Router]
-        P5 --> Switch[Switcher: By Value]:::router
+    subgraph AIBranch["Phase 2: AI Enrichment"]
+        Copy --> Switch[Switcher: By Value]:::router
         
-        Switch -->|High| P6[Pipe: High]
-        Switch -->|Medium| P7[Pipe: Medium]
-        Switch -->|Low| P8[Pipe: Low]
+        Switch -->|High| Claude[Claude: Analysis]:::transformer
+        Switch -->|Medium| Gemini[Gemini: Category]:::transformer
+        Switch -->|Low| DeepSeek[DeepSeek: Priority]:::transformer
         
-        P6 --> Claude[Claude: Analysis]:::transformer
-        P7 --> Gemini[Gemini: Category]:::transformer
-        P8 --> DeepSeek[DeepSeek: Priority]:::transformer
-        
-        Claude --> P9[Pipe: Claude Out]
-        Gemini --> P10[Pipe: Gemini Out]
-        DeepSeek --> P11[Pipe: DeepSeek Out]
-        
-        P9 --> AIFunnel[Funnel: AI Results]:::router
-        P10 --> AIFunnel
-        P11 --> AIFunnel
+        Claude --> AIFunnel[Funnel: AI Results]:::router
+        Gemini --> AIFunnel
+        DeepSeek --> AIFunnel
     end
     
-    subgraph CleaningBranch["Phase 3: Data Cleaning Branch"]
-        Copy --> P12[Pipe: To Cleaning]
-        P12 --> Dedup[RemoveDuplicates]:::transformer
-        Dedup --> P13[Pipe: Deduplicated]
-        P13 --> DelCols[DeleteColumns]:::transformer
+    subgraph CleaningBranch["Phase 3: Cleaning"]
+        Copy --> Dedup[RemoveDuplicates]:::transformer
+        Dedup --> DelCols[DeleteColumns]:::transformer
     end
     
     subgraph Integration["Phase 4: Integration"]
-        AIFunnel --> P14[Pipe: AI Enriched]
-        DelCols --> P15[Pipe: Cleaned]
+        AIFunnel --> Joiner[Joiner: AI + Clean]:::transformer
+        DelCols --> Joiner
         
-        P14 --> Joiner[Joiner: AI + Clean]:::transformer
-        P15 --> Joiner
-        
-        Joiner --> P16[Pipe: Master]
-        P16 --> Agg[Aggregator: By Segment]:::transformer
+        Joiner --> Agg[Aggregator: By Segment]:::transformer
     end
     
-    subgraph Distribution["Phase 5: Multi-Destination"]
-        Agg --> P17[Pipe: Aggregated]
-        P17 --> FinalCopy[Copy: Distributor]:::router
+    subgraph Distribution["Phase 5: Distribution"]
+        Agg --> FinalCopy[Copy: Distributor]:::router
         
-        FinalCopy --> P18[Pipe: To BQ]
-        FinalCopy --> P19[Pipe: To PG]
-        FinalCopy --> P20[Pipe: To CSV]
-        
-        P18 --> D1[BigQuery: Warehouse]:::destination
-        P19 --> D2[PostgreSQL: Operations]:::destination
-        P20 --> D3[CSV: Backup]:::destination
+        FinalCopy --> D1[BigQuery: Warehouse]:::destination
+        FinalCopy --> D2[PostgreSQL: Operations]:::destination
+        FinalCopy --> D3[CSV: Backup]:::destination
     end
     
     classDef origin fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
