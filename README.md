@@ -10,7 +10,7 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 
 ## ✨ Key Features
 
-- 🧩 **27 Modular Components** (5 base + 22 specialized)
+- 🧩 **28 Modular Components** (5 base + 22 specialized)
 - 🔌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
 - 🤖 **AI-Powered Transformations**: Claude (Anthropic), Gemini (Google), DeepSeek
 - ✅ **Robust Validations** and intelligent error handling
@@ -67,7 +67,6 @@ project/
 │   │   │   ├── Destination           
 │   │   │   └── Node                  
 │   │   └── common.py                  
-│   │       ├── Generator             
 │   │       ├── CSVOrigin             
 │   │       ├── APIRestOrigin         
 │   │       ├── Printer               
@@ -76,6 +75,8 @@ project/
 │   │       ├── Switcher              
 │   │       ├── Copy                  
 │   │       ├── Filter                
+│   │       ├── Generator                
+│   │       ├── OpenOrigin                
 │   │       ├── Aggregator            
 │   │       ├── DeleteColumns         
 │   │       ├── RemoveDuplicates      
