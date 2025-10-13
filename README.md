@@ -188,6 +188,8 @@ classDiagram
 | `MySQLOrigin` | Queries MySQL databases |
 | `PostgresOrigin` | Queries PostgreSQL databases |
 | `GCPBigQueryOrigin` | Queries Google BigQuery |
+| `OpenOrigin` | Takes any Dataframe |
+
 
 #### 🟢 Destinations (Data Sinks) - 1→0
 
