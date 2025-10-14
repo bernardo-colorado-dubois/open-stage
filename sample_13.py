@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
+
 # Create test data
 df = pd.DataFrame({
     'id': [1, 2, 3, 4, 5, 6],
@@ -17,7 +19,7 @@ origin = OpenOrigin("test_data", df)
 transformer = OpenAIPromptTransformer(
     name="sentiment",
     model="gpt-3.5-turbo",  # Start with cheaper model
-    api_key=os.getenv("OPEN_AI_API_KEY"),
+    api_key=OPEN_AI_API_KEY,
     prompt="Add sentiment column: positive, negative, or neutral",
     max_tokens=1000
 )
