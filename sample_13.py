@@ -8,8 +8,8 @@ load_dotenv()
 
 # Create test data
 df = pd.DataFrame({
-    'id': [1, 2, 3],
-    'review': ['Great product!', 'Terrible experience.', 'It\'s okay.']
+    'id': [1, 2, 3, 4, 5, 6],
+    'review': ['Great product!', 'Terrible experience.', 'It\'s okay.','Loved it!', 'Not worth the price.','I don\'t know.']
 })
 
 # Create pipeline
