@@ -1,5 +1,5 @@
 # Open-Stage - Complete Knowledge Base
-## Version 2.2 - January 2025
+## Version 2.3 - January 2025
 
 ---
 
@@ -8,17 +8,17 @@
 **Open-Stage** is an enterprise-grade ETL (Extract, Transform, Load) platform built in Python, inspired by IBM DataStage. It implements a pipes and filters architecture that enables the creation of modular, scalable data processing pipelines with multi-model generative AI capabilities.
 
 ## Key Statistics
-- **Total Components**: 28 (5 base + 23 specialized)
+- **Total Components**: 29 (5 base + 24 specialized)
 - **License**: MIT
 - **Authors**: Bernardo Colorado Dubois, Saul Hernandez Cordova
 - **Python Version**: 3.8+
-- **Current Version**: 2.2
+- **Current Version**: 2.3
 - **Code Style**: 2-space indentation
 
 ## Core Features
-- 28 Modular Components (5 base + 23 specialized)
+- 29 Modular Components (5 base + 24 specialized)
 - Multiple Data Sources: CSV, MySQL, PostgreSQL, BigQuery, REST APIs, In-Memory DataFrames
-- AI-Powered Transformations: Claude (Anthropic), Gemini (Google), DeepSeek
+- AI-Powered Transformations: OpenAI (GPT-4o, GPT-4-Turbo), Claude (Anthropic), Gemini (Google), DeepSeek
 - Robust Validations and intelligent error handling
 - Method Chaining for fluent syntax
 - Extensible Architecture by provider and component type
@@ -78,10 +78,14 @@ project/
 │   │   ├── __init__.py
 │   │   └── claude.py                  # Anthropic AI (1)
 │   │       └── AnthropicPromptTransformer # Node: Claude transformations
-│   └── deepseek/
+│   ├── deepseek/
+│   │   ├── __init__.py
+│   │   └── deepseek.py                # DeepSeek AI (1)
+│   │       └── DeepSeekPromptTransformer # Node: DeepSeek transformations
+│   └── open_ai/
 │       ├── __init__.py
-│       └── deepseek.py                # DeepSeek AI (1)
-│           └── DeepSeekPromptTransformer # Node: DeepSeek transformations
+│       └── chat_gpt.py                # OpenAI AI (1) ✨ NEW!
+│           └── OpenAIPromptTransformer # Node: GPT transformations
 ```
 
 ## File Organization Rules
@@ -109,12 +113,13 @@ project/
   - `src/anthropic/claude.py`
   - `src/google/gemini.py`
   - `src/deepseek/deepseek.py`
+  - `src/open_ai/chat_gpt.py` ✨ **NEW!**
 - **Contains**: AI Prompt Transformers
 
 ### Module Naming Conventions
 - **Origin classes**: End with `Origin` (e.g., `MySQLOrigin`)
 - **Destination classes**: End with `Destination` (e.g., `MySQLDestination`)
-- **AI Transformers**: End with `PromptTransformer` (e.g., `AnthropicPromptTransformer`)
+- **AI Transformers**: End with `PromptTransformer` (e.g., `OpenAIPromptTransformer`)
 - **Generic components**: Descriptive names (e.g., `Filter`, `Aggregator`)
 
 ---
@@ -770,6 +775,62 @@ Transformer("calculator", my_transform)
 
 ## AI Transformers - 1→1
 
+### OpenAIPromptTransformer ✨ NEW!
+**Module**: `src/open_ai/chat_gpt.py`
+**Purpose**: Transforms data using OpenAI GPT models.
+
+**Dependencies**: `openai`
+
+**Parameters**:
+- `name`: str - Component name
+- `model`: str - OpenAI model name
+- `api_key`: str - OpenAI API key
+- `prompt`: str - Transformation instructions
+- `max_tokens`: int = 16000 - Max output tokens
+
+**Popular models**: 
+- `gpt-4o` - Most capable, multimodal (recommended)
+- `gpt-4-turbo` - Fast, high intelligence
+- `gpt-4` - High intelligence
+- `gpt-3.5-turbo` - Fast and economical
+- `gpt-4o-mini` - Cost-effective for simpler tasks
+
+**Format**: CSV (optimized for token efficiency)
+
+**Example**:
+```python
+openai = OpenAIPromptTransformer(
+  name="sentiment_analyzer",
+  model="gpt-4o",
+  api_key="sk-...",
+  prompt="Add sentiment analysis column (positive, negative, neutral)",
+  max_tokens=16000
+)
+```
+
+**Features**:
+- CSV format for token efficiency
+- Uses OpenAI SDK
+- Automatic truncation handling (finish_reason: "length")
+- Token usage tracking (prompt_tokens, completion_tokens, total_tokens)
+- System instructions for format adherence
+- temperature=0.0 for maximum instruction adherence
+- Handles markdown code block removal
+- Comprehensive error handling
+
+**Context Window**: Up to 128K tokens (GPT-4o, GPT-4-Turbo)
+
+**Use Cases**:
+- Sentiment analysis
+- Text classification and categorization
+- Entity extraction
+- Data enrichment
+- Content generation
+- Translation
+- Summarization
+
+---
+
 ### AnthropicPromptTransformer
 **Module**: `src/anthropic/claude.py`
 **Purpose**: Transforms data using Claude AI.
@@ -874,6 +935,22 @@ deepseek = DeepSeekPromptTransformer(
 
 ---
 
+## AI Transformers Comparison Table
+
+| Feature | OpenAI | Anthropic | Gemini | DeepSeek |
+|---------|--------|-----------|--------|----------|
+| **SDK Used** | openai | anthropic | google-generativeai | openai |
+| **Base URL** | Default | Default | Default | api.deepseek.com |
+| **Max Tokens Default** | 16000 | 16000 | 16000 | 8192 |
+| **Temperature** | 0.0 | N/A | 0.0 | 0.0 |
+| **Truncation Reason** | "length" | "max_tokens" | N/A | "length" |
+| **Token Tracking** | ✅ prompt/completion | ✅ input/output | ✅ prompt/candidates | ✅ prompt/completion |
+| **Context Window** | 128K | 200K | 2M | 131K |
+| **Best For** | General purpose | Long context | Fast inference | Coding tasks |
+| **Pricing** | $$$ | $$$$ | $$ | $ |
+
+---
+
 # CONNECTIVITY RULES
 
 | Component Type | Inputs | Outputs | Override | Notes |
@@ -917,6 +994,7 @@ db-dtypes>=1.0.0
 anthropic>=0.18.0
 google-generativeai>=0.3.0
 openai>=1.0.0
+python-dotenv>=0.19.0
 ```
 
 ---
@@ -962,10 +1040,10 @@ mysql_origin.add_output_pipe(pipe).set_destination(pg_dest)
 mysql_origin.pump()
 ```
 
-## Pattern 4: AI Transformation
+## Pattern 4: AI Transformation with OpenAI
 ```python
 csv_origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
-ai_transform = AnthropicPromptTransformer("ai", model="claude-sonnet-4-5-20250929", api_key="...", prompt="...")
+ai_transform = OpenAIPromptTransformer("ai", model="gpt-4o", api_key="...", prompt="...")
 csv_dest = CSVDestination("writer", path_or_buf="output.csv", index=False)
 
 pipe1, pipe2 = Pipe("in"), Pipe("out")
@@ -976,7 +1054,35 @@ ai_transform.add_output_pipe(pipe2).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
-## Pattern 5: Split and Combine
+## Pattern 5: Multi-Model AI Comparison
+```python
+# Use Copy to duplicate data for multiple AI models
+origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
+copy = Copy("duplicator")
+origin.add_output_pipe(Pipe("in")).set_destination(copy)
+
+# Process with different AI models in parallel
+openai = OpenAIPromptTransformer("gpt", model="gpt-4o", api_key="...", prompt="...")
+claude = AnthropicPromptTransformer("claude", model="claude-sonnet-4-5-20250929", api_key="...", prompt="...")
+gemini = GeminiPromptTransformer("gemini", model="gemini-2.0-flash-exp", api_key="...", prompt="...")
+
+copy.add_output_pipe(Pipe("to_gpt")).set_destination(openai)
+copy.add_output_pipe(Pipe("to_claude")).set_destination(claude)
+copy.add_output_pipe(Pipe("to_gemini")).set_destination(gemini)
+
+# Consolidate results
+funnel = Funnel("consolidator")
+openai.add_output_pipe(Pipe("gpt_out")).set_destination(funnel)
+claude.add_output_pipe(Pipe("claude_out")).set_destination(funnel)
+gemini.add_output_pipe(Pipe("gemini_out")).set_destination(funnel)
+
+destination = CSVDestination("results", path_or_buf="comparison.csv", index=False)
+funnel.add_output_pipe(Pipe("final")).set_destination(destination)
+
+origin.pump()
+```
+
+## Pattern 6: Split and Combine
 ```python
 origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
 switcher = Switcher("split", field="category", mapping={"A": "pa", "B": "pb"})
@@ -1050,13 +1156,17 @@ flowchart LR
 - PostgreSQL Origin and Destination
 - BigQuery Origin and Destination
 - OpenOrigin for in-memory DataFrames
-- 28 total components
+- OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo) ✨ **NEW!**
+- Anthropic Transformer (Claude)
+- Google Transformer (Gemini)
+- DeepSeek Transformer
+- **29 total components**
 
 ## Pending AI Providers
-- [ ] OpenAI Transformer (GPT-4, GPT-4 Turbo, GPT-4o)
 - [ ] Mistral AI Transformer
 - [ ] Cohere Transformer
 - [ ] Llama Transformer (via Ollama/local)
+- [ ] Azure OpenAI Transformer
 
 ## Potential Components
 
@@ -1139,11 +1249,72 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 3. Implement custom routing logic in `pump()`
 4. Use 2-space indentation
 
+## When creating new AI Transformers:
+1. Inherit from `Node` class
+2. Use default 1→1 connectivity (no override needed)
+3. Initialize AI client in `_initialize_client()` (lazy initialization)
+4. Use CSV format for input/output (token efficiency)
+5. Set temperature=0.0 for instruction adherence
+6. Implement truncation handling
+7. Track token usage
+8. Remove markdown code blocks from responses
+9. Store received DataFrame in `self.received_df`
+10. Call `self.pump()` at end of `sink()`
+11. Clear `self.received_df = None` after processing
+12. Use 2-space indentation
+
 ## File Organization:
 - Core components: `src/core/`
 - Database-specific: `src/{database_name}/common.py`
 - Cloud provider-specific: `src/{provider}/`
 - AI provider-specific: `src/{ai_provider}/`
+
+---
+
+## Testing Checklist for New Components
+
+### For Origins:
+- [ ] Test connection with valid credentials
+- [ ] Test connection with invalid credentials
+- [ ] Test with empty result set
+- [ ] Test with large result set (1000+ rows)
+- [ ] Test error handling for network issues
+- [ ] Verify resource cleanup (connections closed)
+
+### For Destinations:
+- [ ] Test write with valid data
+- [ ] Test write with empty DataFrame
+- [ ] Test write with large DataFrame (1000+ rows)
+- [ ] Test all if_exists modes (fail, replace, append)
+- [ ] Test error handling for permission issues
+- [ ] Verify resource cleanup (connections closed)
+
+### For Transformers:
+- [ ] Test with valid input data
+- [ ] Test with edge cases (empty, single row, large dataset)
+- [ ] Test error handling for invalid data
+- [ ] Verify output schema is correct
+- [ ] Test that original data is not modified
+- [ ] Verify resource cleanup
+
+### For AI Transformers:
+- [ ] Test with valid API key
+- [ ] Test with invalid API key
+- [ ] Test with small dataset (<10 rows)
+- [ ] Test with large dataset (100+ rows)
+- [ ] Test truncation handling (set low max_tokens)
+- [ ] Verify token usage is logged correctly
+- [ ] Test CSV parsing works correctly
+- [ ] Test markdown code block removal
+- [ ] Verify all original columns are preserved
+- [ ] Test in complete pipeline (Origin → AI → Destination)
+
+---
+
+**Version**: 2.3  
+**Date**: January 2025  
+**Status**: Production Ready ✅  
+**Latest Addition**: OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo) ✨
 
 ---
 
