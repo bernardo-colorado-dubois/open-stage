@@ -10,9 +10,9 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 
 ## ✨ Key Features
 
-- 🧩 **28 Modular Components** (5 base + 22 specialized)
+- 🧩 **29 Modular Components** (5 base + 24 specialized)
 - 🔌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
-- 🤖 **AI-Powered Transformations**: Claude (Anthropic), Gemini (Google), DeepSeek
+- 🤖 **AI-Powered Transformations**: OpenAI (GPT-4o, GPT-4-Turbo), Claude (Anthropic), Gemini (Google), DeepSeek
 - ✅ **Robust Validations** and intelligent error handling
 - ⛓️ **Method Chaining** for fluent syntax
 - 🔧 **Extensible Architecture** by provider and component type
@@ -103,13 +103,17 @@ project/
 │   │   ├── __init__.py
 │   │   └── claude.py                  
 │   │       └── AnthropicPromptTransformer 
-│   └── deepseek/
+│   ├── deepseek/
+│   │   ├── __init__.py
+│   │   └── deepseek.py                
+│   │       └── DeepSeekPromptTransformer 
+│   └── open_ai/
 │       ├── __init__.py
-│       └── deepseek.py                
-│           └── DeepSeekPromptTransformer 
+│       └── chat_gpt.py                
+│           └── OpenAIPromptTransformer 
 ```
 
-## 🏗️ Architecture
+## 🗃️ Architecture
 
 ### Base Classes
 
@@ -225,8 +229,9 @@ classDiagram
 
 | Component | Provider | Model Examples |
 |-----------|----------|----------------|
+| `OpenAIPromptTransformer` | OpenAI | gpt-4o, gpt-4-turbo, gpt-3.5-turbo |
 | `AnthropicPromptTransformer` | Anthropic | claude-sonnet-4-5-20250929 |
-| `GeminiPromptTransformer` | Google | gemini-2.5-flash |
+| `GeminiPromptTransformer` | Google | gemini-2.0-flash-exp |
 | `DeepSeekPromptTransformer` | DeepSeek | deepseek-chat, deepseek-coder |
 
 ## 💡 Usage Examples
@@ -272,7 +277,49 @@ graph LR
     style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 2: AI-Powered Transformation
+### Example 2: AI-Powered Transformation with OpenAI
+
+```python
+from src.core.common import CSVOrigin, CSVDestination
+from src.open_ai.chat_gpt import OpenAIPromptTransformer
+from src.core.base import Pipe
+
+# Read reviews
+csv_origin = CSVOrigin("reader", filepath_or_buffer="reviews.csv")
+
+# AI sentiment analysis with GPT-4o
+openai = OpenAIPromptTransformer(
+    name="sentiment_analyzer",
+    model="gpt-4o",
+    api_key="your-api-key",
+    prompt="Add a sentiment_score column (positive, negative, neutral) based on the review text",
+    max_tokens=16000
+)
+
+# Write enriched data
+csv_dest = CSVDestination("writer", path_or_buf="reviews_analyzed.csv", index=False)
+
+# Connect pipeline
+pipe1, pipe2 = Pipe("input"), Pipe("output")
+
+csv_origin.add_output_pipe(pipe1).set_destination(openai)
+openai.add_output_pipe(pipe2).set_destination(csv_dest)
+
+# Execute
+csv_origin.pump()
+```
+
+```mermaid
+graph LR
+    A[CSVOrigin<br/>reader<br/>reviews.csv] -->|pipe: input| B[🤖 OpenAIPromptTransformer<br/>sentiment_analyzer<br/>gpt-4o<br/>Add sentiment_score column]
+    B -->|pipe: output| C[CSVDestination<br/>writer<br/>reviews_analyzed.csv]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+### Example 3: AI Transformation with Claude
 
 ```python
 from src.core.common import CSVOrigin, CSVDestination
@@ -314,7 +361,7 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 3: Routing with Switcher and BigQuery
+### Example 4: Routing with Switcher and BigQuery
 
 ```python
 from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
@@ -389,7 +436,7 @@ graph LR
     style E fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 4: MySQL to PostgreSQL Migration
+### Example 5: MySQL to PostgreSQL Migration
 
 ```python
 from src.mysql.common import MySQLOrigin
@@ -443,7 +490,7 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 5: PostgreSQL ETL Pipeline
+### Example 6: PostgreSQL ETL Pipeline
 
 ```python
 from src.postgres.common import PostgresOrigin, PostgresDestination
@@ -506,7 +553,7 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 6: MySQL Query and Export to CSV
+### Example 7: MySQL Query and Export to CSV
 
 ```python
 from src.mysql.common import MySQLOrigin
@@ -547,7 +594,7 @@ graph LR
     style B fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 7: MySQL ETL with Filter and Aggregation
+### Example 8: MySQL ETL with Filter and Aggregation
 
 ```python
 from src.mysql.common import MySQLOrigin, MySQLDestination
@@ -653,6 +700,41 @@ openai>=1.0.0
 | **Transformers** (Joiner) | 2 | 1 | Yes (inputs) |
 | **AI Transformers** | 1 | 1 | No |
 
+## 🤖 AI Transformers Comparison
+
+| Feature | OpenAI | Anthropic | Gemini | DeepSeek |
+|---------|--------|-----------|--------|----------|
+| **Models** | GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo | Claude Sonnet 4.5 | Gemini 2.0 Flash | DeepSeek Chat/Coder |
+| **Context** | 128K tokens | 200K tokens | 2M tokens | 131K tokens |
+| **Best For** | General purpose | Long context | Fast inference | Coding tasks |
+| **Pricing** | $$$ | $$$$ | $$ | $ |
+
+### When to Use Each AI Model
+
+**Use OpenAI (GPT-4o)** when:
+- You need the most capable model
+- Working with multimodal data (future)
+- Require high reasoning capability
+- Need consistent high-quality results
+
+**Use Claude (Anthropic)** when:
+- You need very long context (200K+ tokens)
+- Working with complex analysis
+- Require detailed explanations
+- Need constitutional AI alignment
+
+**Use Gemini (Google)** when:
+- You need fast inference
+- Working with Google Cloud ecosystem
+- Require multimodal capabilities
+- Need good cost/performance ratio
+
+**Use DeepSeek** when:
+- You need specialized coding tasks
+- Require economical pricing
+- Working with technical content
+- Need fast processing
+
 ## 🤝 Contributing
 
 Contributions are welcome! To contribute:
@@ -672,8 +754,13 @@ Contributions are welcome! To contribute:
 
 ## 🗺️ Roadmap
 
+### Completed AI Providers
+- ✅ OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo)
+- ✅ Anthropic Transformer (Claude Sonnet 4.5)
+- ✅ Google Transformer (Gemini 2.0 Flash)
+- ✅ DeepSeek Transformer (DeepSeek Chat/Coder)
+
 ### Pending AI Providers
-- [ ] OpenAI Transformer (GPT-4, GPT-4 Turbo, GPT-4o)
 - [ ] Mistral AI Transformer
 - [ ] Cohere Transformer
 - [ ] Llama Transformer (via Ollama/local)
