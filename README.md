@@ -11,24 +11,23 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 ## ✨ Key Features
 
 - 🧩 **29 Modular Components** (5 base + 24 specialized)
-- 🔌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
+- 📌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
 - 🤖 **AI-Powered Transformations**: OpenAI (GPT-4o, GPT-4-Turbo), Claude (Anthropic), Gemini (Google), DeepSeek
 - ✅ **Robust Validations** and intelligent error handling
 - ⛓️ **Method Chaining** for fluent syntax
 - 🔧 **Extensible Architecture** by provider and component type
 - 📜 **Open Source** under MIT License
+- 🚀 **Advanced BigQuery Support** with pre/post queries, partitioning, and clustering
 
 
 ## 🚀 Quick Start
 
 ### Installation
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Simple Pipeline Example
-
 ```python
 from src.core.common import CSVOrigin, Filter, CSVDestination
 from src.core.base import Pipe
@@ -51,7 +50,6 @@ csv_origin.pump()
 ```
 
 ## 📦 Project Structure
-
 ```
 project/
 ├── LICENSE                    
@@ -126,7 +124,6 @@ Open-Stage is built on 5 fundamental classes:
 5. **Node**: Abstract class for transformers (inherits from Origin and Destination)
 
 ### Class Diagram
-
 ```mermaid
 classDiagram
     class DataPackage {
@@ -185,26 +182,26 @@ classDiagram
 
 #### 🔵 Origins (Data Sources) - 0→1
 
-| Component | Description |
-|-----------|-------------|
-| `Generator` | Generates sequential numeric data |
-| `CSVOrigin` | Reads CSV files |
-| `APIRestOrigin` | Consumes REST APIs |
-| `MySQLOrigin` | Queries MySQL databases |
-| `PostgresOrigin` | Queries PostgreSQL databases |
-| `GCPBigQueryOrigin` | Queries Google BigQuery |
-| `OpenOrigin` | Takes any Dataframe |
+| Component | Description | Advanced Features |
+|-----------|-------------|-------------------|
+| `Generator` | Generates sequential numeric data | - |
+| `CSVOrigin` | Reads CSV files | - |
+| `APIRestOrigin` | Consumes REST APIs | - |
+| `MySQLOrigin` | Queries MySQL databases | - |
+| `PostgresOrigin` | Queries PostgreSQL databases | - |
+| `GCPBigQueryOrigin` | Queries Google BigQuery | ✨ before_query, after_query, dry_run, partitioning |
+| `OpenOrigin` | Takes any DataFrame | - |
 
 
 #### 🟢 Destinations (Data Sinks) - 1→0
 
-| Component | Description |
-|-----------|-------------|
-| `Printer` | Displays data to console |
-| `CSVDestination` | Writes CSV files |
-| `MySQLDestination` | Writes data to MySQL |
-| `PostgresDestination` | Writes data to PostgreSQL |
-| `GCPBigQueryDestination` | Loads data to BigQuery |
+| Component | Description | Advanced Features |
+|-----------|-------------|-------------------|
+| `Printer` | Displays data to console | - |
+| `CSVDestination` | Writes CSV files | - |
+| `MySQLDestination` | Writes data to MySQL | - |
+| `PostgresDestination` | Writes data to PostgreSQL | - |
+| `GCPBigQueryDestination` | Loads data to BigQuery | ✨ before_query, after_query, clustering, partitioning |
 
 #### 🟡 Routers - N↔M
 
@@ -237,7 +234,6 @@ classDiagram
 ## 💡 Usage Examples
 
 ### Example 1: Filter and Aggregate
-
 ```python
 from src.core.common import CSVOrigin, Filter, Aggregator, CSVDestination
 from src.core.base import Pipe
@@ -264,7 +260,6 @@ aggregator.add_output_pipe(pipe3).set_destination(csv_dest)
 # Execute
 csv_origin.pump()
 ```
-
 ```mermaid
 graph LR
     A[CSVOrigin<br/>reader<br/>sales.csv] -->|pipe: p1| B[Filter<br/>high_value<br/>amount > 1000]
@@ -278,7 +273,6 @@ graph LR
 ```
 
 ### Example 2: AI-Powered Transformation with OpenAI
-
 ```python
 from src.core.common import CSVOrigin, CSVDestination
 from src.open_ai.chat_gpt import OpenAIPromptTransformer
@@ -308,7 +302,6 @@ openai.add_output_pipe(pipe2).set_destination(csv_dest)
 # Execute
 csv_origin.pump()
 ```
-
 ```mermaid
 graph LR
     A[CSVOrigin<br/>reader<br/>reviews.csv] -->|pipe: input| B[🤖 OpenAIPromptTransformer<br/>sentiment_analyzer<br/>gpt-4o<br/>Add sentiment_score column]
@@ -319,125 +312,74 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 3: AI Transformation with Claude
-
-```python
-from src.core.common import CSVOrigin, CSVDestination
-from src.anthropic.claude import AnthropicPromptTransformer
-from src.core.base import Pipe
-
-# Read reviews
-csv_origin = CSVOrigin("reader", filepath_or_buffer="reviews.csv")
-
-# AI sentiment analysis with Claude
-claude = AnthropicPromptTransformer(
-    name="sentiment_analyzer",
-    model="claude-sonnet-4-5-20250929",
-    api_key="your-api-key",
-    prompt="Add a sentiment_score column (positive, negative, neutral) based on the review text",
-    max_tokens=16000
-)
-
-# Write enriched data
-csv_dest = CSVDestination("writer", path_or_buf="reviews_analyzed.csv", index=False)
-
-# Connect pipeline
-pipe1, pipe2 = Pipe("input"), Pipe("output")
-
-csv_origin.add_output_pipe(pipe1).set_destination(claude)
-claude.add_output_pipe(pipe2).set_destination(csv_dest)
-
-# Execute
-csv_origin.pump()
-```
-
-```mermaid
-graph LR
-    A[CSVOrigin<br/>reader<br/>reviews.csv] -->|pipe: input| B[🤖 AnthropicPromptTransformer<br/>sentiment_analyzer<br/>claude-sonnet-4-5<br/>Add sentiment_score column]
-    B -->|pipe: output| C[CSVDestination<br/>writer<br/>reviews_analyzed.csv]
-    
-    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
-    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-```
-
-### Example 4: Routing with Switcher and BigQuery
-
+### Example 3: BigQuery with Advanced Features
 ```python
 from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
-from src.core.common import Switcher
+from src.core.common import Filter
 from src.core.base import Pipe
 
-# Read from BigQuery
+# Extract from BigQuery with before_query
 bq_origin = GCPBigQueryOrigin(
-    name="reader",
+    name="sales_extract",
     project_id="my-project",
-    query="SELECT * FROM dataset.table"
+    before_query="""
+        -- Prepare staging table
+        CREATE OR REPLACE TABLE `my-project.staging.daily_sales` AS
+        SELECT * FROM `my-project.raw.sales`
+        WHERE date = CURRENT_DATE();
+    """,
+    query="SELECT * FROM `my-project.staging.daily_sales`",
+    dry_run=False,  # Set to True to estimate cost without executing
+    max_results=10000
 )
 
-bq_pipe = Pipe(name='bq_pipe')
+# Filter high-value sales
+filter_node = Filter("high_value", "amount", ">", 1000)
 
-# Split by category
-switcher = Switcher(
-    "router",
-    field="category",
-    mapping={"A": "pipe_a", "B": "pipe_b", "C": "pipe_c"}
-)
-
-# Output pipes for A,B,C
-pipe_a = Pipe(name='pipe_a')
-pipe_b = Pipe(name='pipe_b')
-pipe_c = Pipe(name='pipe_c')
-
-bigquery_a = GCPBigQueryDestination(
-    name="bigquery_a",
+# Load to BigQuery with partitioning and clustering
+bq_dest = GCPBigQueryDestination(
+    name="sales_loader",
     project_id="my-project",
-    dataset="dataset",
-    table="table_a",
-    write_disposition="WRITE_TRUNCATE"
+    dataset="warehouse",
+    table="sales_partitioned",
+    write_disposition="WRITE_APPEND",
+    time_partitioning={
+        'type': 'DAY',
+        'field': 'sale_date'
+    },
+    clustering_fields=['region', 'product_category'],
+    after_query="""
+        -- Log the load
+        INSERT INTO `my-project.audit.load_log` (
+            table_name, loaded_at, record_count
+        ) VALUES (
+            'sales_partitioned',
+            CURRENT_TIMESTAMP(),
+            (SELECT COUNT(*) FROM `my-project.warehouse.sales_partitioned`)
+        );
+    """
 )
 
-bigquery_b = GCPBigQueryDestination(
-    name="bigquery_b",
-    project_id="my-project",
-    dataset="dataset",
-    table="table_b",
-    write_disposition="WRITE_TRUNCATE"
-)
+# Connect pipeline
+pipe1, pipe2 = Pipe("extract"), Pipe("load")
 
-bigquery_c = GCPBigQueryDestination(
-    name="bigquery_c",
-    project_id="my-project",
-    dataset="dataset",
-    table="table_c",
-    write_disposition="WRITE_TRUNCATE"
-)
+bq_origin.add_output_pipe(pipe1).set_destination(filter_node)
+filter_node.add_output_pipe(pipe2).set_destination(bq_dest)
 
-bq_origin.add_output_pipe(bq_pipe).set_destination(switcher)
-switcher.add_output_pipe(pipe_a).set_destination(bigquery_a)
-switcher.add_output_pipe(pipe_b).set_destination(bigquery_b)
-switcher.add_output_pipe(pipe_c).set_destination(bigquery_c)
-
+# Execute
 bq_origin.pump()
 ```
-
 ```mermaid
 graph LR
-    A[GCPBigQueryOrigin<br/>reader<br/>SELECT * FROM dataset.table] -->|pipe: bq_pipe| B{Switcher<br/>router<br/>field: category}
-    
-    B -->|pipe_a<br/>category = A| C[GCPBigQueryDestination<br/>bigquery_a<br/>dataset.table_a<br/>WRITE_TRUNCATE]
-    B -->|pipe_b<br/>category = B| D[GCPBigQueryDestination<br/>bigquery_b<br/>dataset.table_b<br/>WRITE_TRUNCATE]
-    B -->|pipe_c<br/>category = C| E[GCPBigQueryDestination<br/>bigquery_c<br/>dataset.table_c<br/>WRITE_TRUNCATE]
+    A[GCPBigQueryOrigin<br/>sales_extract<br/>before_query + dry_run] -->|pipe: extract| B[Filter<br/>high_value<br/>amount > 1000]
+    B -->|pipe: load| C[GCPBigQueryDestination<br/>sales_loader<br/>partitioned + clustered<br/>after_query]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#F5A623,stroke:#C17D11,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-    style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-    style E fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 5: MySQL to PostgreSQL Migration
-
+### Example 4: MySQL to PostgreSQL Migration
 ```python
 from src.mysql.common import MySQLOrigin
 from src.postgres.common import PostgresDestination
@@ -479,7 +421,6 @@ filter_node.add_output_pipe(pipe2).set_destination(pg_dest)
 # Execute
 mysql_origin.pump()
 ```
-
 ```mermaid
 graph LR
     A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM customers<br/>WHERE active = 1] -->|pipe: extract| B[Filter<br/>high_value<br/>total_purchases > 10000]
@@ -490,179 +431,9 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 6: PostgreSQL ETL Pipeline
-
-```python
-from src.postgres.common import PostgresOrigin, PostgresDestination
-from src.core.common import Aggregator
-from src.core.base import Pipe
-
-# Read from PostgreSQL
-pg_origin = PostgresOrigin(
-    name="pg_reader",
-    host="localhost",
-    database="analytics_db",
-    user="postgres",
-    password="password",
-    query="""
-        SELECT category, product, amount, date 
-        FROM sales 
-        WHERE date >= '2024-01-01'
-    """
-)
-
-# Aggregate by category
-aggregator = Aggregator(
-    name="summary",
-    key="category",
-    agg_field_name="total_sales",
-    agg_type="sum",
-    field_to_agg="amount"
-)
-
-# Write to PostgreSQL (different schema)
-pg_dest = PostgresDestination(
-    name="pg_writer",
-    host="localhost",
-    database="analytics_db",
-    user="postgres",
-    password="password",
-    table="sales_summary",
-    schema="reports",
-    if_exists="replace"
-)
-
-# Connect pipeline
-pipe1 = Pipe("extract")
-pipe2 = Pipe("load")
-
-pg_origin.add_output_pipe(pipe1).set_destination(aggregator)
-aggregator.add_output_pipe(pipe2).set_destination(pg_dest)
-
-# Execute
-pg_origin.pump()
-```
-
-```mermaid
-graph LR
-    A[PostgresOrigin<br/>pg_reader<br/>SELECT category, product, amount<br/>FROM sales] -->|pipe: extract| B[Aggregator<br/>summary<br/>SUM amount<br/>GROUP BY category]
-    B -->|pipe: load| C[PostgresDestination<br/>pg_writer<br/>reports.sales_summary<br/>if_exists: replace]
-    
-    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-```
-
-### Example 7: MySQL Query and Export to CSV
-
-```python
-from src.mysql.common import MySQLOrigin
-from src.core.common import CSVDestination
-from src.core.base import Pipe
-
-# Read from MySQL
-mysql_origin = MySQLOrigin(
-    name="mysql_reader",
-    host="localhost",
-    database="company_db",
-    user="root",
-    password="password",
-    query="SELECT * FROM customers WHERE active = 1"
-)
-
-# Write to CSV
-csv_dest = CSVDestination(
-    name="csv_writer",
-    path_or_buf="customers.csv",
-    index=False
-)
-
-# Connect pipeline
-pipe = Pipe("data_pipe")
-
-mysql_origin.add_output_pipe(pipe).set_destination(csv_dest)
-
-# Execute
-mysql_origin.pump()
-```
-
-```mermaid
-graph LR
-    A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM customers<br/>WHERE active = 1] -->|pipe: data_pipe| B[CSVDestination<br/>csv_writer<br/>customers.csv]
-    
-    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-```
-
-### Example 8: MySQL ETL with Filter and Aggregation
-
-```python
-from src.mysql.common import MySQLOrigin, MySQLDestination
-from src.core.common import Filter, Aggregator
-from src.core.base import Pipe
-
-# Read from MySQL
-mysql_origin = MySQLOrigin(
-    name="mysql_reader",
-    host="localhost",
-    database="dulceria",
-    user="root",
-    password="password",
-    query="SELECT * FROM compras WHERE estado = 'pendiente'"
-)
-
-# Filter high-value purchases
-filter_node = Filter("high_value", "total", ">", 1000)
-
-# Aggregate by supplier
-aggregator = Aggregator(
-    name="by_supplier",
-    key="proveedor_id",
-    agg_field_name="total_compras",
-    agg_type="sum",
-    field_to_agg="total"
-)
-
-# Write to MySQL (different table)
-mysql_dest = MySQLDestination(
-    name="mysql_writer",
-    host="localhost",
-    database="dulceria",
-    user="root",
-    password="password",
-    table="compras_importantes",
-    if_exists="append"
-)
-
-# Connect pipeline
-pipe1 = Pipe("extract")
-pipe2 = Pipe("transform")
-pipe3 = Pipe("load")
-
-mysql_origin.add_output_pipe(pipe1).set_destination(filter_node)
-filter_node.add_output_pipe(pipe2).set_destination(aggregator)
-aggregator.add_output_pipe(pipe3).set_destination(mysql_dest)
-
-# Execute
-mysql_origin.pump()
-```
-
-```mermaid
-graph LR
-    A[MySQLOrigin<br/>mysql_reader<br/>SELECT * FROM compras] -->|pipe: extract| B[Filter<br/>high_value<br/>total > 1000]
-    B -->|pipe: transform| C[Aggregator<br/>by_supplier<br/>SUM total<br/>GROUP BY proveedor_id]
-    C -->|pipe: load| D[MySQLDestination<br/>mysql_writer<br/>compras_importantes<br/>if_exists: append]
-    
-    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style C fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style D fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
-```
-
 ## 🔧 Configuration
 
 ### Dependencies
-
 ```txt
 pandas>=1.3.0
 requests>=2.25.0
@@ -735,6 +506,56 @@ openai>=1.0.0
 - Working with technical content
 - Need fast processing
 
+## 🚀 Advanced BigQuery Features
+
+### GCPBigQueryOrigin
+
+**New Capabilities:**
+- ✨ **before_query**: Execute SQL before extraction (create temp tables, call procedures)
+- ✨ **after_query**: Execute SQL after extraction (audit logging, cleanup)
+- ✨ **table**: Direct table read without writing SELECT *
+- ✨ **max_results**: Limit rows for testing
+- ✨ **dry_run**: Validate query and estimate costs without executing
+- ✨ **query_parameters**: Parameterized queries for security
+- ✨ **Enhanced logging**: Bytes processed, costs, duration
+
+**Example:**
+```python
+origin = GCPBigQueryOrigin(
+    name="sales_data",
+    project_id="my-project",
+    before_query="CREATE TEMP TABLE staging AS SELECT * FROM raw WHERE valid = true",
+    query="SELECT * FROM staging",
+    dry_run=True,  # Validate and estimate cost
+    max_results=1000
+)
+```
+
+### GCPBigQueryDestination
+
+**New Capabilities:**
+- ✨ **before_query**: Execute SQL before loading (create backups, prepare staging)
+- ✨ **after_query**: Execute SQL after loading (audit, validate, refresh views)
+- ✨ **time_partitioning**: Partition tables by time (DAY, HOUR, MONTH, YEAR)
+- ✨ **clustering_fields**: Cluster by up to 4 fields for query optimization
+- ✨ **schema_update_options**: Auto-update schema (add fields, relax constraints)
+- ✨ **Enhanced logging**: Rows loaded, table metadata, job statistics
+
+**Example:**
+```python
+dest = GCPBigQueryDestination(
+    name="sales_warehouse",
+    project_id="my-project",
+    dataset="warehouse",
+    table="sales",
+    write_disposition="WRITE_APPEND",
+    time_partitioning={'type': 'DAY', 'field': 'sale_date'},
+    clustering_fields=['region', 'product_category'],
+    before_query="CREATE BACKUP TABLE IF NOT EXISTS",
+    after_query="CALL validate_data_quality()"
+)
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! To contribute:
@@ -760,6 +581,10 @@ Contributions are welcome! To contribute:
 - ✅ Google Transformer (Gemini 2.0 Flash)
 - ✅ DeepSeek Transformer (DeepSeek Chat/Coder)
 
+### Completed BigQuery Enhancements
+- ✅ GCPBigQueryOrigin: before_query, after_query, dry_run, max_results
+- ✅ GCPBigQueryDestination: before_query, after_query, partitioning, clustering
+
 ### Pending AI Providers
 - [ ] Mistral AI Transformer
 - [ ] Cohere Transformer
@@ -769,6 +594,7 @@ Contributions are welcome! To contribute:
 
 #### Origins
 - ✅ MySQL (completed)
+- ✅ PostgreSQL (completed)
 - [ ] MariaDB, MongoDB, Kafka Consumer
 - [ ] S3 (AWS), Azure Blob Storage, Snowflake
 - [ ] Excel, Parquet, JSON, XML, SFTP
@@ -795,7 +621,6 @@ Contributions are welcome! To contribute:
 ## 📄 License
 
 This project is licensed under the MIT License.
-
 ```
 MIT License
 

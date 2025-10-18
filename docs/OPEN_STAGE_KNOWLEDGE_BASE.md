@@ -1,5 +1,5 @@
 # Open-Stage - Complete Knowledge Base
-## Version 2.3 - January 2025
+## Version 2.4 - January 2025
 
 ---
 
@@ -12,7 +12,7 @@
 - **License**: MIT
 - **Authors**: Bernardo Colorado Dubois, Saul Hernandez Cordova
 - **Python Version**: 3.8+
-- **Current Version**: 2.3
+- **Current Version**: 2.4
 - **Code Style**: 2-space indentation
 
 ## Core Features
@@ -22,11 +22,11 @@
 - Robust Validations and intelligent error handling
 - Method Chaining for fluent syntax
 - Extensible Architecture by provider and component type
+- **Advanced BigQuery Support**: before_query, after_query, partitioning, clustering, dry_run
 
 ---
 
 # PROJECT STRUCTURE
-
 ```
 project/
 ├── LICENSE                    # MIT License
@@ -70,8 +70,8 @@ project/
 │   ├── google/
 │   │   ├── __init__.py
 │   │   ├── cloud.py                   # GCP BigQuery services (2)
-│   │   │   ├── GCPBigQueryOrigin     # Origin: BigQuery queries
-│   │   │   └── GCPBigQueryDestination # Destination: BigQuery load
+│   │   │   ├── GCPBigQueryOrigin     # Origin: BigQuery queries ✨ ENHANCED
+│   │   │   └── GCPBigQueryDestination # Destination: BigQuery load ✨ ENHANCED
 │   │   └── gemini.py                  # Google AI (1)
 │   │       └── GeminiPromptTransformer # Node: Gemini transformations
 │   ├── anthropic/
@@ -84,7 +84,7 @@ project/
 │   │       └── DeepSeekPromptTransformer # Node: DeepSeek transformations
 │   └── open_ai/
 │       ├── __init__.py
-│       └── chat_gpt.py                # OpenAI AI (1) ✨ NEW!
+│       └── chat_gpt.py                # OpenAI AI (1)
 │           └── OpenAIPromptTransformer # Node: GPT transformations
 ```
 
@@ -113,7 +113,7 @@ project/
   - `src/anthropic/claude.py`
   - `src/google/gemini.py`
   - `src/deepseek/deepseek.py`
-  - `src/open_ai/chat_gpt.py` ✨ **NEW!**
+  - `src/open_ai/chat_gpt.py`
 - **Contains**: AI Prompt Transformers
 
 ### Module Naming Conventions
@@ -130,7 +130,6 @@ project/
 
 ### 1. DataPackage
 **Purpose**: Encapsulates data and metadata from a pipe.
-
 ```python
 class DataPackage:
   def __init__(self, pipe_name: str, df: pd.DataFrame) -> None:
@@ -146,7 +145,6 @@ class DataPackage:
 
 ### 2. Pipe
 **Purpose**: Connects components and transports data.
-
 ```python
 class Pipe:
   def __init__(self, name: str) -> None:
@@ -167,7 +165,6 @@ class Pipe:
 
 ### 3. Origin (Abstract Class)
 **Connectivity**: 0 → 1 (by default)
-
 ```python
 class Origin:
   def __init__(self):
@@ -187,7 +184,6 @@ class Origin:
 
 ### 4. Destination (Abstract Class)
 **Connectivity**: 1 → 0 (by default)
-
 ```python
 class Destination:
   def __init__(self):
@@ -205,7 +201,6 @@ class Destination:
 
 ### 5. Node (Abstract Class)
 **Connectivity**: Flexible (inherits from Origin and Destination)
-
 ```python
 class Node(Origin, Destination):
   def __init__(self):
@@ -383,27 +378,92 @@ pg = PostgresOrigin(
 
 ---
 
-### GCPBigQueryOrigin
+### GCPBigQueryOrigin ✨ ENHANCED
 **Module**: `src/google/cloud.py`
-**Purpose**: Queries Google BigQuery.
+**Purpose**: Queries Google BigQuery with advanced features.
 
 **Dependencies**: `google-cloud-bigquery`, `google-auth`, `db-dtypes`
 
 **Parameters**:
 - `name`: str - Component name
 - `project_id`: str - GCP project ID
-- `query`: str - BigQuery SQL query
+- `query`: str (optional) - BigQuery SQL query (required if table not provided)
+- `table`: str (optional) - Table reference in format 'dataset.table' or 'project.dataset.table'
 - `credentials_path`: str = None - Path to service account JSON (optional)
+- **`before_query`: str = None** - ✨ SQL query to execute BEFORE extraction
+- **`after_query`: str = None** - ✨ SQL query to execute AFTER extraction
+- **`max_results`: int = None** - ✨ Maximum rows to return (for testing)
+- **`use_legacy_sql`: bool = False** - ✨ Use legacy SQL syntax
+- **`query_parameters`: list = None** - ✨ Query parameters for parameterized queries
+- **`location`: str = None** - ✨ BigQuery location (e.g., 'US', 'EU')
+- **`job_labels`: dict = {}** - ✨ Labels for the BigQuery job
+- **`timeout`: float = None** - ✨ Query timeout in seconds
+- **`use_query_cache`: bool = True** - ✨ Use cached results if available
+- **`dry_run`: bool = False** - ✨ Validate query and estimate cost without executing
 
-**Example**:
+**New Features**:
+- **before_query**: Create temp tables, call procedures, prepare data before extraction
+- **after_query**: Audit logging, cleanup, post-processing after extraction
+- **table**: Direct table read without writing SELECT *
+- **max_results**: Limit rows for testing without modifying query
+- **dry_run**: Validate SQL and estimate processing costs
+- **query_parameters**: Secure parameterized queries
+- **Enhanced logging**: Bytes processed, costs, cache hits, job duration
+
+**Example 1: Basic usage with table**:
 ```python
 bq = GCPBigQueryOrigin(
   name="bq_reader",
   project_id="my-project",
-  query="SELECT * FROM `dataset.table` LIMIT 1000",
-  credentials_path="/path/to/credentials.json"
+  table="dataset.customers",
+  max_results=1000
 )
 ```
+
+**Example 2: With before_query**:
+```python
+bq = GCPBigQueryOrigin(
+  name="bq_reader",
+  project_id="my-project",
+  before_query="""
+    CREATE TEMP TABLE staging AS
+    SELECT * FROM raw_data WHERE valid = true
+  """,
+  query="SELECT * FROM staging",
+  dry_run=False
+)
+```
+
+**Example 3: Dry run for cost estimation**:
+```python
+bq = GCPBigQueryOrigin(
+  name="cost_check",
+  project_id="my-project",
+  query="SELECT * FROM `bigquery-public-data.usa_names.usa_1910_current`",
+  dry_run=True  # Only validates and estimates cost
+)
+```
+
+**Example 4: Parameterized query**:
+```python
+from google.cloud import bigquery
+
+bq = GCPBigQueryOrigin(
+  name="filtered",
+  project_id="my-project",
+  query="SELECT * FROM dataset.sales WHERE date >= @start_date",
+  query_parameters=[
+    bigquery.ScalarQueryParameter("start_date", "DATE", "2024-01-01")
+  ]
+)
+```
+
+**Use Cases**:
+- **before_query**: Create staging tables, call validation procedures, prepare temp data
+- **after_query**: Log extraction metadata, cleanup temp tables, update control tables
+- **dry_run**: Estimate query costs before running expensive operations
+- **max_results**: Quick testing without processing full datasets
+- **table**: Simplified syntax for full table reads
 
 ---
 
@@ -524,9 +584,9 @@ pg_dest = PostgresDestination(
 
 ---
 
-### GCPBigQueryDestination
+### GCPBigQueryDestination ✨ ENHANCED
 **Module**: `src/google/cloud.py`
-**Purpose**: Loads data to Google BigQuery.
+**Purpose**: Loads data to Google BigQuery with advanced features.
 
 **Dependencies**: `google-cloud-bigquery`, `google-auth`
 
@@ -537,22 +597,113 @@ pg_dest = PostgresDestination(
 - `table`: str - Table name
 - `write_disposition`: str - Write mode
 - `credentials_path`: str = None - Path to service account JSON (optional)
+- **`before_query`: str = None** - ✨ SQL query to execute BEFORE loading
+- **`after_query`: str = None** - ✨ SQL query to execute AFTER loading
+- **`schema`: list = None** - ✨ BigQuery schema (auto-detected if None)
+- **`create_disposition`: str = 'CREATE_IF_NEEDED'** - ✨ Table creation behavior
+- **`schema_update_options`: list = []** - ✨ Schema update options
+- **`clustering_fields`: list = None** - ✨ Fields for clustering (max 4)
+- **`time_partitioning`: dict = None** - ✨ Time partitioning configuration
+- **`location`: str = None** - ✨ BigQuery location
+- **`job_labels`: dict = {}** - ✨ Labels for the BigQuery job
+- **`max_bad_records`: int = 0** - ✨ Maximum bad records to tolerate
+- **`autodetect`: bool = True** - ✨ Auto-detect schema from DataFrame
 
 **write_disposition options**:
-- `'WRITE_TRUNCATE'` - Replace table
+- `'WRITE_TRUNCATE'` - Replace table (truncate before load)
 - `'WRITE_APPEND'` - Add to table
 - `'WRITE_EMPTY'` - Only if table empty
 
-**Example**:
+**create_disposition options**:
+- `'CREATE_IF_NEEDED'` - Create table if not exists (default)
+- `'CREATE_NEVER'` - Fail if table doesn't exist
+
+**schema_update_options**:
+- `'ALLOW_FIELD_ADDITION'` - Allow adding new columns
+- `'ALLOW_FIELD_RELAXATION'` - Allow REQUIRED → NULLABLE
+
+**New Features**:
+- **before_query**: Create backups, truncate tables, prepare staging before load
+- **after_query**: Audit logging, data validation, refresh views after load
+- **time_partitioning**: Partition by DAY, HOUR, MONTH, or YEAR for performance
+- **clustering_fields**: Cluster by up to 4 fields to optimize queries
+- **schema_update_options**: Automatically update schema when DataFrame changes
+- **Enhanced logging**: Rows loaded, table metadata, partition/cluster info
+
+**Example 1: Basic load with partitioning**:
 ```python
 bq_dest = GCPBigQueryDestination(
   name="bq_writer",
   project_id="my-project",
-  dataset="my_dataset",
-  table="my_table",
-  write_disposition="WRITE_TRUNCATE"
+  dataset="warehouse",
+  table="sales",
+  write_disposition="WRITE_APPEND",
+  time_partitioning={
+    'type': 'DAY',
+    'field': 'sale_date'
+  }
 )
 ```
+
+**Example 2: With clustering**:
+```python
+bq_dest = GCPBigQueryDestination(
+  name="bq_writer",
+  project_id="my-project",
+  dataset="warehouse",
+  table="events",
+  write_disposition="WRITE_APPEND",
+  clustering_fields=['region', 'product_category', 'user_id']
+)
+```
+
+**Example 3: With before_query and after_query**:
+```python
+bq_dest = GCPBigQueryDestination(
+  name="bq_writer",
+  project_id="my-project",
+  dataset="warehouse",
+  table="customers",
+  write_disposition="WRITE_TRUNCATE",
+  before_query="""
+    -- Create backup
+    CREATE OR REPLACE TABLE `my-project.warehouse.customers_backup` AS
+    SELECT * FROM `my-project.warehouse.customers`;
+  """,
+  after_query="""
+    -- Log the load
+    INSERT INTO `my-project.audit.load_log` (
+      table_name, loaded_at, record_count
+    ) VALUES (
+      'customers',
+      CURRENT_TIMESTAMP(),
+      (SELECT COUNT(*) FROM `my-project.warehouse.customers`)
+    );
+  """
+)
+```
+
+**Example 4: Schema updates allowed**:
+```python
+bq_dest = GCPBigQueryDestination(
+  name="flexible_load",
+  project_id="my-project",
+  dataset="warehouse",
+  table="evolving_table",
+  write_disposition="WRITE_APPEND",
+  schema_update_options=[
+    'ALLOW_FIELD_ADDITION',
+    'ALLOW_FIELD_RELAXATION'
+  ]
+)
+```
+
+**Use Cases**:
+- **before_query**: Backup tables, prepare staging, truncate before full refresh
+- **after_query**: Validate data quality, update metadata, refresh materialized views
+- **time_partitioning**: Improve query performance and reduce costs on large tables
+- **clustering**: Optimize queries that filter on specific columns
+- **schema_update_options**: Handle evolving schemas in production
 
 ---
 
@@ -775,7 +926,7 @@ Transformer("calculator", my_transform)
 
 ## AI Transformers - 1→1
 
-### OpenAIPromptTransformer ✨ NEW!
+### OpenAIPromptTransformer
 **Module**: `src/open_ai/chat_gpt.py`
 **Purpose**: Transforms data using OpenAI GPT models.
 
@@ -981,7 +1132,6 @@ deepseek = DeepSeekPromptTransformer(
 ---
 
 # DEPENDENCIES
-
 ```txt
 pandas>=1.3.0
 requests>=2.25.0
@@ -1054,7 +1204,49 @@ ai_transform.add_output_pipe(pipe2).set_destination(csv_dest)
 csv_origin.pump()
 ```
 
-## Pattern 5: Multi-Model AI Comparison
+## Pattern 5: BigQuery with Advanced Features ✨ NEW
+```python
+# Extract with before_query and dry_run
+bq_origin = GCPBigQueryOrigin(
+  name="sales_extract",
+  project_id="my-project",
+  before_query="""
+    CREATE TEMP TABLE staging AS
+    SELECT * FROM raw_sales WHERE date = CURRENT_DATE()
+  """,
+  query="SELECT * FROM staging",
+  dry_run=False,
+  max_results=10000
+)
+
+# Transform
+filter_node = Filter("high_value", "amount", ">", 1000)
+
+# Load with partitioning and after_query
+bq_dest = GCPBigQueryDestination(
+  name="sales_load",
+  project_id="my-project",
+  dataset="warehouse",
+  table="sales",
+  write_disposition="WRITE_APPEND",
+  time_partitioning={'type': 'DAY', 'field': 'sale_date'},
+  clustering_fields=['region', 'category'],
+  after_query="""
+    INSERT INTO audit.load_log (table_name, loaded_at, record_count)
+    VALUES ('sales', CURRENT_TIMESTAMP(), (SELECT COUNT(*) FROM warehouse.sales))
+  """
+)
+
+# Connect
+pipe1, pipe2 = Pipe("extract"), Pipe("load")
+bq_origin.add_output_pipe(pipe1).set_destination(filter_node)
+filter_node.add_output_pipe(pipe2).set_destination(bq_dest)
+
+# Execute
+bq_origin.pump()
+```
+
+## Pattern 6: Multi-Model AI Comparison
 ```python
 # Use Copy to duplicate data for multiple AI models
 origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
@@ -1082,23 +1274,6 @@ funnel.add_output_pipe(Pipe("final")).set_destination(destination)
 origin.pump()
 ```
 
-## Pattern 6: Split and Combine
-```python
-origin = CSVOrigin("reader", filepath_or_buffer="data.csv")
-switcher = Switcher("split", field="category", mapping={"A": "pa", "B": "pb"})
-funnel = Funnel("combine")
-destination = CSVDestination("writer", path_or_buf="output.csv", index=False)
-
-pipe1, pa, pb, pipe_out = Pipe("p1"), Pipe("pa"), Pipe("pb"), Pipe("out")
-
-origin.add_output_pipe(pipe1).set_destination(switcher)
-switcher.add_output_pipe(pa).set_destination(funnel)
-switcher.add_output_pipe(pb).set_destination(funnel)
-funnel.add_output_pipe(pipe_out).set_destination(destination)
-
-origin.pump()
-```
-
 ---
 
 # MERMAID DIAGRAM COLOR SCHEME
@@ -1111,7 +1286,6 @@ Use these colors consistently in all diagrams:
 - **Destinations** (🟢): `fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff`
 
 ## Mermaid Example
-
 ```mermaid
 flowchart LR
     Origin[CSV Origin]:::origin
@@ -1154,12 +1328,14 @@ flowchart LR
 ## Completed (✅)
 - MySQL Origin and Destination
 - PostgreSQL Origin and Destination
-- BigQuery Origin and Destination
+- BigQuery Origin and Destination with advanced features ✨
 - OpenOrigin for in-memory DataFrames
-- OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo) ✨ **NEW!**
+- OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo)
 - Anthropic Transformer (Claude)
 - Google Transformer (Gemini)
 - DeepSeek Transformer
+- **GCPBigQueryOrigin enhancements**: before_query, after_query, dry_run, max_results ✨
+- **GCPBigQueryDestination enhancements**: before_query, after_query, partitioning, clustering ✨
 - **29 total components**
 
 ## Pending AI Providers
@@ -1167,6 +1343,12 @@ flowchart LR
 - [ ] Cohere Transformer
 - [ ] Llama Transformer (via Ollama/local)
 - [ ] Azure OpenAI Transformer
+
+## Potential Database Enhancements
+- [ ] Apply before_query/after_query to PostgresOrigin/PostgresDestination
+- [ ] Apply before_query/after_query to MySQLOrigin/MySQLDestination
+- [ ] Add partitioning support to PostgreSQL
+- [ ] Add clustering support to other databases
 
 ## Potential Components
 
@@ -1225,6 +1407,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 5. Add comprehensive error handling
 6. Close connections in `finally` block
 7. Use 2-space indentation
+8. **Consider adding `before_query` and `after_query` parameters for advanced workflows**
 
 ## When creating new Destinations:
 1. Inherit from `Destination` class
@@ -1234,6 +1417,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 5. Add comprehensive error handling
 6. Close connections in `finally` block
 7. Use 2-space indentation
+8. **Consider adding `before_query` and `after_query` parameters for advanced workflows**
+9. **Consider performance optimizations like partitioning and clustering**
 
 ## When creating new Transformers (1→1):
 1. Inherit from `Node` class
@@ -1280,14 +1465,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 - [✅] Test with large result set (1000+ rows)
 - [✅] Test error handling for network issues
 - [✅] Verify resource cleanup (connections closed)
+- [✅] **Test before_query and after_query if applicable**
+- [✅] **Test dry_run mode if applicable**
 
 ### For Destinations:
 - [✅] Test write with valid data
 - [✅] Test write with empty DataFrame
 - [✅] Test write with large DataFrame (1000+ rows)
-- [✅] Test all if_exists modes (fail, replace, append)
+- [✅] Test all write modes (fail, replace, append)
 - [✅] Test error handling for permission issues
 - [✅] Verify resource cleanup (connections closed)
+- [✅] **Test before_query and after_query if applicable**
+- [✅] **Test partitioning and clustering if applicable**
 
 ### For Transformers:
 - [✅] Test with valid input data
@@ -1311,10 +1500,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-**Version**: 2.3  
+**Version**: 2.4  
 **Date**: January 2025  
 **Status**: Production Ready ✅  
-**Latest Addition**: OpenAI Transformer (GPT-4o, GPT-4-Turbo, GPT-3.5-Turbo) ✨
+**Latest Updates**: 
+- Enhanced GCPBigQueryOrigin with before_query, after_query, dry_run, max_results ✨
+- Enhanced GCPBigQueryDestination with before_query, after_query, partitioning, clustering ✨
 
 ---
 
