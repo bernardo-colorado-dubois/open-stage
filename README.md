@@ -11,14 +11,15 @@ Open-Stage is an enterprise-grade ETL (Extract, Transform, Load) platform built 
 ## ✨ Key Features
 
 - 🧩 **29 Modular Components** (5 base + 24 specialized)
-- 📌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
+- 🔌 **Multiple Data Sources**: CSV, MySQL, PostgreSQL, BigQuery, REST APIs
 - 🤖 **AI-Powered Transformations**: OpenAI (GPT-4o, GPT-4-Turbo), Claude (Anthropic), Gemini (Google), DeepSeek
 - ✅ **Robust Validations** and intelligent error handling
 - ⛓️ **Method Chaining** for fluent syntax
 - 🔧 **Extensible Architecture** by provider and component type
 - 📜 **Open Source** under MIT License
 - 🚀 **Advanced BigQuery Support** with pre/post queries, partitioning, and clustering
-- 🚀 **Advanced PostgreSQL Support** with pre/post queries, timeout, and parameterized queries ✨ **NEW v2.4**
+- 🚀 **Advanced PostgreSQL Support** with pre/post queries, timeout, and parameterized queries ✨ **v2.4**
+- 🚀 **Advanced MySQL Support** with pre/post queries, timeout, and parameterized queries ✨ **NEW v2.4**
 
 
 ## 🚀 Quick Start
@@ -89,8 +90,8 @@ project/
 │   ├── mysql/
 │   │   ├── __init__.py
 │   │   └── common.py
-│   │       ├── MySQLOrigin
-│   │       └── MySQLDestination
+│   │       ├── MySQLOrigin           ✨ ENHANCED v2.4
+│   │       └── MySQLDestination      ✨ ENHANCED v2.4
 │   ├── google/
 │   │   ├── __init__.py
 │   │   ├── cloud.py                   
@@ -188,7 +189,7 @@ classDiagram
 | `Generator` | Generates sequential numeric data | - |
 | `CSVOrigin` | Reads CSV files | - |
 | `APIRestOrigin` | Consumes REST APIs | - |
-| `MySQLOrigin` | Queries MySQL databases | - |
+| `MySQLOrigin` | Queries MySQL databases | ✨ **v2.4**: before_query, after_query, table, max_results, timeout, query_parameters |
 | `PostgresOrigin` | Queries PostgreSQL databases | ✨ **v2.4**: before_query, after_query, table, max_results, timeout, query_parameters |
 | `GCPBigQueryOrigin` | Queries Google BigQuery | ✨ before_query, after_query, dry_run, partitioning |
 | `OpenOrigin` | Takes any DataFrame | - |
@@ -200,7 +201,7 @@ classDiagram
 |-----------|-------------|-------------------|
 | `Printer` | Displays data to console | - |
 | `CSVDestination` | Writes CSV files | - |
-| `MySQLDestination` | Writes data to MySQL | - |
+| `MySQLDestination` | Writes data to MySQL | ✨ **v2.4**: before_query, after_query, timeout |
 | `PostgresDestination` | Writes data to PostgreSQL | ✨ **v2.4**: before_query, after_query, timeout |
 | `GCPBigQueryDestination` | Loads data to BigQuery | ✨ before_query, after_query, clustering, partitioning |
 
@@ -313,7 +314,102 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 3: PostgreSQL with Advanced Features ✨ NEW v2.4
+### Example 3: MySQL with Advanced Features ✨ NEW v2.4
+```python
+from src.mysql.common import MySQLOrigin, MySQLDestination
+from src.core.common import Filter
+from src.core.base import Pipe
+
+# Extract from MySQL with before_query
+mysql_origin = MySQLOrigin(
+    name="sales_extract",
+    host="localhost",
+    database="warehouse",
+    user="root",
+    password="password",
+    before_query="""
+        -- Prepare staging table
+        CREATE TEMPORARY TABLE staging_sales AS
+        SELECT * FROM raw_sales
+        WHERE status = 'completed'
+        AND date >= CURDATE() - INTERVAL 7 DAY;
+    """,
+    query="SELECT * FROM staging_sales WHERE amount > :min_amount",
+    query_parameters={'min_amount': 100.0},
+    max_results=10000,
+    timeout=300,
+    after_query="""
+        -- Log the extraction
+        INSERT INTO audit.extraction_log (
+            table_name, extracted_at, record_count
+        ) VALUES (
+            'staging_sales',
+            NOW(),
+            (SELECT COUNT(*) FROM staging_sales)
+        );
+    """
+)
+
+# Filter high-value sales
+filter_node = Filter("high_value", "amount", ">", 1000)
+
+# Load to MySQL with before/after queries
+mysql_dest = MySQLDestination(
+    name="sales_loader",
+    host="localhost",
+    database="warehouse",
+    user="root",
+    password="password",
+    table="sales_fact",
+    before_query="""
+        -- Create backup
+        DROP TABLE IF EXISTS sales_fact_backup;
+        CREATE TABLE sales_fact_backup AS
+        SELECT * FROM sales_fact;
+        
+        -- Disable foreign key checks for performance
+        SET FOREIGN_KEY_CHECKS = 0;
+    """,
+    if_exists="replace",
+    timeout=600,
+    after_query="""
+        -- Re-enable foreign key checks
+        SET FOREIGN_KEY_CHECKS = 1;
+        
+        -- Update statistics
+        ANALYZE TABLE sales_fact;
+        
+        -- Log the load
+        INSERT INTO audit.load_log (
+            table_name, loaded_at, record_count
+        ) VALUES (
+            'sales_fact',
+            NOW(),
+            (SELECT COUNT(*) FROM sales_fact)
+        );
+    """
+)
+
+# Connect pipeline
+pipe1, pipe2 = Pipe("extract"), Pipe("load")
+
+mysql_origin.add_output_pipe(pipe1).set_destination(filter_node)
+filter_node.add_output_pipe(pipe2).set_destination(mysql_dest)
+
+# Execute
+mysql_origin.pump()
+```
+```mermaid
+graph LR
+    A[MySQLOrigin<br/>sales_extract<br/>before_query + parameterized] -->|pipe: extract| B[Filter<br/>high_value<br/>amount > 1000]
+    B -->|pipe: load| C[MySQLDestination<br/>sales_loader<br/>before_query + after_query<br/>with timeout]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
+```
+
+### Example 4: PostgreSQL with Advanced Features ✨ v2.4
 ```python
 from src.postgres.common import PostgresOrigin, PostgresDestination
 from src.core.common import Filter
@@ -411,7 +507,7 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 4: BigQuery with Advanced Features
+### Example 5: BigQuery with Advanced Features
 ```python
 from src.google.cloud import GCPBigQueryOrigin, GCPBigQueryDestination
 from src.core.common import Filter
@@ -478,7 +574,7 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 5: MySQL to PostgreSQL Migration
+### Example 6: Cross-Database Migration (MySQL to PostgreSQL)
 ```python
 from src.mysql.common import MySQLOrigin
 from src.postgres.common import PostgresDestination
@@ -605,7 +701,61 @@ openai>=1.0.0
 - Working with technical content
 - Need fast processing
 
-## 🚀 Advanced PostgreSQL Features ✨ NEW v2.4
+## 🚀 Advanced MySQL Features ✨ NEW v2.4
+
+### MySQLOrigin
+
+**New Capabilities:**
+- ✨ **before_query**: Execute SQL before extraction (create temp tables, call procedures)
+- ✨ **after_query**: Execute SQL after extraction (audit logging, cleanup)
+- ✨ **table**: Direct table read without writing SELECT * (supports 'table' or 'database.table')
+- ✨ **max_results**: Limit rows for testing (automatically adds LIMIT)
+- ✨ **timeout**: Control query execution time
+- ✨ **query_parameters**: Parameterized queries for security (use :param_name syntax)
+- ✨ **Enhanced logging**: Duration, rows returned, data types
+
+**Example:**
+```python
+origin = MySQLOrigin(
+    name="sales_data",
+    host="localhost",
+    database="warehouse",
+    user="root",
+    password="password",
+    before_query="CREATE TEMPORARY TABLE staging AS SELECT * FROM raw WHERE valid = true",
+    query="SELECT * FROM staging WHERE amount > :min_amount",
+    query_parameters={'min_amount': 100.0},
+    max_results=1000,
+    timeout=300,
+    after_query="INSERT INTO audit.log (table_name, extracted_at) VALUES ('staging', NOW())"
+)
+```
+
+### MySQLDestination
+
+**New Capabilities:**
+- ✨ **before_query**: Execute SQL before loading (create backups, prepare staging)
+- ✨ **after_query**: Execute SQL after loading (audit, validate, update statistics)
+- ✨ **timeout**: Control connection and query execution time
+- ✨ **Enhanced logging**: Rows loaded, duration, table metadata
+
+**Example:**
+```python
+dest = MySQLDestination(
+    name="sales_warehouse",
+    host="localhost",
+    database="warehouse",
+    user="root",
+    password="password",
+    table="sales",
+    before_query="DROP TABLE IF EXISTS sales_backup; CREATE TABLE sales_backup AS SELECT * FROM sales",
+    if_exists="replace",
+    timeout=600,
+    after_query="ANALYZE TABLE sales; OPTIMIZE TABLE sales;"
+)
+```
+
+## 🚀 Advanced PostgreSQL Features ✨ v2.4
 
 ### PostgresOrigin
 
@@ -738,12 +888,10 @@ Contributions are welcome! To contribute:
 ### Completed Database Enhancements
 - ✅ GCPBigQueryOrigin: before_query, after_query, dry_run, max_results
 - ✅ GCPBigQueryDestination: before_query, after_query, partitioning, clustering
-- ✅ PostgresOrigin: before_query, after_query, timeout, max_results, query_parameters, table ✨ **NEW v2.4**
-- ✅ PostgresDestination: before_query, after_query, timeout ✨ **NEW v2.4**
-
-### In Progress
-- 🚧 MySQLOrigin enhancements (before_query, after_query, timeout, max_results, query_parameters, table)
-- 🚧 MySQLDestination enhancements (before_query, after_query, timeout)
+- ✅ PostgresOrigin: before_query, after_query, timeout, max_results, query_parameters, table ✨ **v2.4**
+- ✅ PostgresDestination: before_query, after_query, timeout ✨ **v2.4**
+- ✅ MySQLOrigin: before_query, after_query, timeout, max_results, query_parameters, table ✨ **NEW v2.4**
+- ✅ MySQLDestination: before_query, after_query, timeout ✨ **NEW v2.4**
 
 ### Pending AI Providers
 - [ ] Mistral AI Transformer
@@ -753,14 +901,14 @@ Contributions are welcome! To contribute:
 ### Potential Components
 
 #### Origins
-- ✅ MySQL (completed)
+- ✅ MySQL (completed - enhanced v2.4)
 - ✅ PostgreSQL (completed - enhanced v2.4)
 - [ ] MariaDB, MongoDB, Kafka Consumer
 - [ ] S3 (AWS), Azure Blob Storage, Snowflake
 - [ ] Excel, Parquet, JSON, XML, SFTP
 
 #### Destinations
-- ✅ MySQL (completed)
+- ✅ MySQL (completed - enhanced v2.4)
 - ✅ PostgreSQL (completed - enhanced v2.4)
 - [ ] MariaDB, MongoDB, Kafka Producer
 - [ ] S3 (AWS), Azure Blob Storage, Snowflake
