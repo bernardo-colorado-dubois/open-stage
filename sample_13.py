@@ -35,21 +35,11 @@ sentiment_switcher = Switcher(
     },
 )
 
-positive_printer = Printer("output")
-
-
-input_pipe = Pipe("input_pipe")
-sentiments_pipe = Pipe("sentiments_pipe")
-
-positive_pipe = Pipe("positive_pipe")
-negative_pipe = Pipe("negative_pipe")
-neutral_pipe = Pipe("neutral_pipe")
-
-
-
-origin.add_output_pipe(input_pipe).set_destination(ai_transformer)
-ai_transformer.add_output_pipe(sentiments_pipe).set_destination(sentiment_switcher)
-
+origin.add_output_pipe(Pipe("origin_pipe")).set_destination(ai_transformer)
+ai_transformer.add_output_pipe(Pipe("transformed_data")).set_destination(sentiment_switcher)
+sentiment_switcher.add_output_pipe(Pipe("positive_pipe")).set_destination(Printer("Positive Reviews"))
+sentiment_switcher.add_output_pipe(Pipe("negative_pipe")).set_destination(Printer("Negative Reviews"))
+sentiment_switcher.add_output_pipe(Pipe("neutral_pipe")).set_destination(Printer("Neutral Reviews"))
 
 # Execute
 origin.pump()
