@@ -1,50 +1,50 @@
-# GCPBigQueryDestination - Guía de Uso
+# GCPBigQueryDestination - Usage Guide
 
-Componente para cargar datos a Google BigQuery con capacidades avanzadas.
-
----
-
-## 🎯 Características
-
-- ✅ Carga de DataFrames a BigQuery
-- ✅ Queries pre y post carga (`before_query`, `after_query`)
-- ✅ Particionamiento temporal (por día, hora, mes, año)
-- ✅ Clustering para optimizar queries
-- ✅ Actualización automática de schema
-- ✅ Control de disposición de escritura (TRUNCATE, APPEND, EMPTY)
-- ✅ Tolerancia a errores configurable
-- ✅ Logging detallado con estadísticas
+Component for loading data to Google BigQuery with advanced capabilities.
 
 ---
 
-## 📦 Instalación
+## 🎯 Features
+
+- ✅ DataFrame loading to BigQuery
+- ✅ Pre and post load queries (`before_query`, `after_query`)
+- ✅ Time partitioning (by day, hour, month, year)
+- ✅ Clustering for query optimization
+- ✅ Automatic schema updates
+- ✅ Write disposition control (TRUNCATE, APPEND, EMPTY)
+- ✅ Configurable error tolerance
+- ✅ Detailed logging with statistics
+
+---
+
+## 📦 Installation
 ```bash
 pip install google-cloud-bigquery google-auth db-dtypes pandas
 ```
 
 ---
 
-## 🚀 Uso Básico
+## 🚀 Basic Usage
 
-### Ejemplo 1: Carga Simple (APPEND)
+### Example 1: Simple Load (APPEND)
 ```python
 from src.google.cloud import GCPBigQueryDestination
 from src.core.base import Pipe
 from src.core.common import CSVOrigin
 
-# Leer datos
+# Read data
 origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")
 
-# Destino BigQuery
+# BigQuery destination
 destination = GCPBigQueryDestination(
     name="sales_loader",
     project_id="my-project",
     dataset="analytics",
     table="sales",
-    write_disposition="WRITE_APPEND"  # Agregar datos
+    write_disposition="WRITE_APPEND"  # Append data
 )
 
-# Conectar y ejecutar
+# Connect and execute
 pipe = Pipe("pipe1")
 origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
@@ -52,15 +52,15 @@ origin.pump()
 
 ---
 
-### Ejemplo 2: Reemplazar Tabla (TRUNCATE)
+### Example 2: Replace Table (TRUNCATE)
 ```python
-# Reemplazar todos los datos de la tabla
+# Replace all table data
 destination = GCPBigQueryDestination(
     name="daily_report",
     project_id="my-project",
     dataset="reports",
     table="daily_summary",
-    write_disposition="WRITE_TRUNCATE"  # ✨ Reemplazar tabla completa
+    write_disposition="WRITE_TRUNCATE"  # ✨ Replace entire table
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -69,15 +69,15 @@ origin.pump()
 
 ---
 
-### Ejemplo 3: Solo si Tabla Está Vacía (EMPTY)
+### Example 3: Only if Table is Empty (EMPTY)
 ```python
-# Solo cargar si la tabla no tiene datos
+# Only load if table has no data
 destination = GCPBigQueryDestination(
     name="initial_load",
     project_id="my-project",
     dataset="warehouse",
     table="customers",
-    write_disposition="WRITE_EMPTY",  # ✨ Solo si tabla vacía
+    write_disposition="WRITE_EMPTY",  # ✨ Only if table is empty
     create_disposition="CREATE_IF_NEEDED"
 )
 
@@ -87,22 +87,22 @@ origin.pump()
 
 ---
 
-## 🔧 Funcionalidades Avanzadas
+## 🔧 Advanced Features
 
-### Ejemplo 4: Before Query (Preparar Antes de Cargar)
+### Example 4: Before Query (Prepare Before Loading)
 ```python
-# Ejecutar query ANTES de cargar datos
+# Execute query BEFORE loading data
 destination = GCPBigQueryDestination(
     name="staged_load",
     project_id="my-project",
     dataset="warehouse",
     table="orders",
     before_query="""
-        -- Crear backup antes de cargar
+        -- Create backup before loading
         CREATE OR REPLACE TABLE `my-project.warehouse.orders_backup` AS
         SELECT * FROM `my-project.warehouse.orders`;
         
-        -- Truncar tabla staging
+        -- Truncate staging table
         TRUNCATE TABLE `my-project.staging.temp_orders`;
     """,
     write_disposition="WRITE_TRUNCATE"
@@ -112,18 +112,18 @@ origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Casos de uso de `before_query`:**
-- Crear backups antes de cargar
-- Truncar tablas específicas
-- Preparar staging areas
-- Validar pre-condiciones
-- Limpiar datos antiguos
+**Use cases for `before_query`:**
+- Create backups before loading
+- Truncate specific tables
+- Prepare staging areas
+- Validate pre-conditions
+- Clean old data
 
 ---
 
-### Ejemplo 5: After Query (Auditoría y Post-procesamiento)
+### Example 5: After Query (Auditing and Post-processing)
 ```python
-# Ejecutar query DESPUÉS de cargar datos
+# Execute query AFTER loading data
 destination = GCPBigQueryDestination(
     name="customer_loader",
     project_id="my-project",
@@ -131,7 +131,7 @@ destination = GCPBigQueryDestination(
     table="customers",
     write_disposition="WRITE_APPEND",
     after_query="""
-        -- Registrar en log de auditoría
+        -- Log to audit
         INSERT INTO `my-project.audit.load_log` (
             table_name,
             loaded_at,
@@ -144,7 +144,7 @@ destination = GCPBigQueryDestination(
             'open-stage-pipeline'
         );
         
-        -- Actualizar metadata
+        -- Update metadata
         UPDATE `my-project.crm.table_metadata`
         SET last_updated = CURRENT_TIMESTAMP()
         WHERE table_name = 'customers';
@@ -155,34 +155,34 @@ origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Casos de uso de `after_query`:**
-- Logging de auditoría
-- Actualizar tablas de metadata
-- Ejecutar validaciones post-carga
-- Llamar stored procedures
-- Actualizar vistas materializadas
+**Use cases for `after_query`:**
+- Audit logging
+- Update metadata tables
+- Execute post-load validations
+- Call stored procedures
+- Update materialized views
 
 ---
 
-### Ejemplo 6: Workflow Completo (Before + After)
+### Example 6: Complete Workflow (Before + After)
 ```python
-# Pipeline completo con preparación y post-procesamiento
+# Complete pipeline with preparation and post-processing
 destination = GCPBigQueryDestination(
     name="sales_etl",
     project_id="my-project",
     dataset="warehouse",
     table="sales_fact",
     
-    # ANTES: Preparar
+    # BEFORE: Prepare
     before_query="""
-        -- Backup incremental
+        -- Incremental backup
         CREATE OR REPLACE TABLE `my-project.warehouse.sales_fact_backup_{DATE}` AS
         SELECT * FROM `my-project.warehouse.sales_fact`;
         
-        -- Preparar staging
+        -- Prepare staging
         TRUNCATE TABLE `my-project.staging.sales_staging`;
         
-        -- Marcar inicio de carga
+        -- Mark load start
         UPDATE `my-project.control.etl_status`
         SET status = 'LOADING', start_time = CURRENT_TIMESTAMP()
         WHERE table_name = 'sales_fact';
@@ -190,15 +190,15 @@ destination = GCPBigQueryDestination(
     
     write_disposition="WRITE_TRUNCATE",
     
-    # DESPUÉS: Validar y registrar
+    # AFTER: Validate and log
     after_query="""
-        -- Validar datos cargados
+        -- Validate loaded data
         CALL `my-project.procedures.validate_sales_data`();
         
-        -- Actualizar dimensiones
+        -- Update dimensions
         CALL `my-project.procedures.refresh_sales_aggregates`();
         
-        -- Registrar éxito
+        -- Log success
         INSERT INTO `my-project.audit.etl_runs` (
             pipeline_name,
             table_name,
@@ -213,7 +213,7 @@ destination = GCPBigQueryDestination(
             'SUCCESS'
         );
         
-        -- Actualizar control
+        -- Update control
         UPDATE `my-project.control.etl_status`
         SET status = 'COMPLETED', end_time = CURRENT_TIMESTAMP()
         WHERE table_name = 'sales_fact';
@@ -226,9 +226,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 7: Tabla Particionada por Tiempo
+### Example 7: Time Partitioned Table
 ```python
-# Crear tabla particionada por fecha para mejor performance
+# Create time-partitioned table for better performance
 destination = GCPBigQueryDestination(
     name="events_loader",
     project_id="my-project",
@@ -236,8 +236,8 @@ destination = GCPBigQueryDestination(
     table="events",
     write_disposition="WRITE_APPEND",
     time_partitioning={
-        'type': 'DAY',           # Partición por día
-        'field': 'event_date'    # Campo de fecha
+        'type': 'DAY',           # Partition by day
+        'field': 'event_date'    # Date field
     }
 )
 
@@ -245,40 +245,40 @@ origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Tipos de particionamiento:**
-- `'DAY'` - Por día (recomendado)
-- `'HOUR'` - Por hora
-- `'MONTH'` - Por mes
-- `'YEAR'` - Por año
+**Partitioning types:**
+- `'DAY'` - By day (recommended)
+- `'HOUR'` - By hour
+- `'MONTH'` - By month
+- `'YEAR'` - By year
 
 ---
 
-### Ejemplo 8: Tabla con Clustering
+### Example 8: Table with Clustering
 ```python
-# Optimizar queries con clustering
+# Optimize queries with clustering
 destination = GCPBigQueryDestination(
     name="orders_loader",
     project_id="my-project",
     dataset="warehouse",
     table="orders",
     write_disposition="WRITE_APPEND",
-    clustering_fields=['customer_id', 'product_id', 'region']  # Max 4 campos
+    clustering_fields=['customer_id', 'product_id', 'region']  # Max 4 fields
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Beneficios del clustering:**
-- Mejora performance de queries filtradas
-- Reduce costos (solo escanea bloques necesarios)
-- Ideal para campos frecuentemente filtrados
+**Clustering benefits:**
+- Improves filtered query performance
+- Reduces costs (only scans necessary blocks)
+- Ideal for frequently filtered fields
 
 ---
 
-### Ejemplo 9: Particionamiento + Clustering
+### Example 9: Partitioning + Clustering
 ```python
-# Combinar particionamiento y clustering para máxima optimización
+# Combine partitioning and clustering for maximum optimization
 destination = GCPBigQueryDestination(
     name="optimized_sales",
     project_id="my-project",
@@ -298,11 +298,11 @@ origin.pump()
 
 ---
 
-### Ejemplo 10: Schema Personalizado
+### Example 10: Custom Schema
 ```python
 from google.cloud import bigquery
 
-# Definir schema manualmente
+# Define schema manually
 custom_schema = [
     bigquery.SchemaField("customer_id", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("name", "STRING", mode="REQUIRED"),
@@ -317,8 +317,8 @@ destination = GCPBigQueryDestination(
     dataset="crm",
     table="customers",
     write_disposition="WRITE_APPEND",
-    schema=custom_schema,  # Schema explícito
-    autodetect=False       # Desactivar auto-detección
+    schema=custom_schema,  # Explicit schema
+    autodetect=False       # Disable auto-detection
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -327,9 +327,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 11: Actualización Automática de Schema
+### Example 11: Automatic Schema Update
 ```python
-# Permitir agregar columnas automáticamente
+# Allow automatic column addition
 destination = GCPBigQueryDestination(
     name="flexible_loader",
     project_id="my-project",
@@ -337,8 +337,8 @@ destination = GCPBigQueryDestination(
     table="evolving_table",
     write_disposition="WRITE_APPEND",
     schema_update_options=[
-        'ALLOW_FIELD_ADDITION',      # Permitir nuevas columnas
-        'ALLOW_FIELD_RELAXATION'     # Relajar restricciones (REQUIRED → NULLABLE)
+        'ALLOW_FIELD_ADDITION',      # Allow new columns
+        'ALLOW_FIELD_RELAXATION'     # Relax restrictions (REQUIRED → NULLABLE)
     ]
 )
 
@@ -348,9 +348,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 12: Con Credenciales y Labels
+### Example 12: With Credentials and Labels
 ```python
-# Configuración completa con autenticación y organización
+# Complete configuration with authentication and organization
 destination = GCPBigQueryDestination(
     name="secure_loader",
     project_id="my-project",
@@ -358,7 +358,7 @@ destination = GCPBigQueryDestination(
     table="pii_customers",
     write_disposition="WRITE_APPEND",
     credentials_path="/path/to/service-account.json",
-    location="EU",  # Datos en Europa
+    location="EU",  # Data in Europe
     job_labels={
         "team": "data-engineering",
         "env": "production",
@@ -372,16 +372,16 @@ origin.pump()
 
 ---
 
-### Ejemplo 13: Tolerancia a Errores
+### Example 13: Error Tolerance
 ```python
-# Permitir algunos registros con errores
+# Allow some records with errors
 destination = GCPBigQueryDestination(
     name="lenient_loader",
     project_id="my-project",
     dataset="raw",
     table="web_logs",
     write_disposition="WRITE_APPEND",
-    max_bad_records=100  # Tolerar hasta 100 registros con errores
+    max_bad_records=100  # Tolerate up to 100 records with errors
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -390,7 +390,7 @@ origin.pump()
 
 ---
 
-## 📊 Output Ejemplo
+## 📊 Example Output
 ```
 GCPBigQueryDestination 'sales_etl' received data from pipe: 'pipe1'
 GCPBigQueryDestination 'sales_etl' using default credentials
@@ -450,102 +450,102 @@ GCPBigQueryDestination 'sales_etl' executing after_query...
 
 ---
 
-## 📋 Parámetros Completos
+## 📋 Complete Parameters
 
-| Parámetro | Tipo | Requerido | Default | Descripción |
-|-----------|------|-----------|---------|-------------|
-| `name` | str | ✅ | - | Nombre del componente |
-| `project_id` | str | ✅ | - | ID del proyecto GCP |
-| `dataset` | str | ✅ | - | Nombre del dataset |
-| `table` | str | ✅ | - | Nombre de la tabla |
-| `write_disposition` | str | ✅ | - | Modo de escritura |
-| `credentials_path` | str | ❌ | None | Ruta al JSON de service account |
-| `before_query` | str | ❌ | None | Query a ejecutar ANTES |
-| `after_query` | str | ❌ | None | Query a ejecutar DESPUÉS |
-| `schema` | list | ❌ | None | Schema personalizado |
-| `create_disposition` | str | ❌ | 'CREATE_IF_NEEDED' | Crear tabla si no existe |
-| `schema_update_options` | list | ❌ | [] | Opciones de actualización |
-| `clustering_fields` | list | ❌ | None | Campos para clustering (max 4) |
-| `time_partitioning` | dict | ❌ | None | Configuración de particionamiento |
-| `location` | str | ❌ | None | Región de BigQuery |
-| `job_labels` | dict | ❌ | {} | Labels del job |
-| `max_bad_records` | int | ❌ | 0 | Máximo de registros erróneos |
-| `autodetect` | bool | ❌ | True | Auto-detectar schema |
-
----
-
-## 📝 Valores de write_disposition
-
-| Valor | Comportamiento |
-|-------|----------------|
-| `WRITE_TRUNCATE` | Reemplaza toda la tabla (borra y recrea) |
-| `WRITE_APPEND` | Agrega datos a la tabla existente |
-| `WRITE_EMPTY` | Solo escribe si la tabla está vacía (falla si tiene datos) |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | str | ✅ | - | Component name |
+| `project_id` | str | ✅ | - | GCP project ID |
+| `dataset` | str | ✅ | - | Dataset name |
+| `table` | str | ✅ | - | Table name |
+| `write_disposition` | str | ✅ | - | Write mode |
+| `credentials_path` | str | ❌ | None | Path to service account JSON |
+| `before_query` | str | ❌ | None | Query to execute BEFORE |
+| `after_query` | str | ❌ | None | Query to execute AFTER |
+| `schema` | list | ❌ | None | Custom schema |
+| `create_disposition` | str | ❌ | 'CREATE_IF_NEEDED' | Create table if not exists |
+| `schema_update_options` | list | ❌ | [] | Update options |
+| `clustering_fields` | list | ❌ | None | Clustering fields (max 4) |
+| `time_partitioning` | dict | ❌ | None | Partitioning config |
+| `location` | str | ❌ | None | BigQuery region |
+| `job_labels` | dict | ❌ | {} | Job labels |
+| `max_bad_records` | int | ❌ | 0 | Maximum error records |
+| `autodetect` | bool | ❌ | True | Auto-detect schema |
 
 ---
 
-## 📝 Valores de create_disposition
+## 🔧 write_disposition Values
 
-| Valor | Comportamiento |
-|-------|----------------|
-| `CREATE_IF_NEEDED` | Crea la tabla si no existe (default) |
-| `CREATE_NEVER` | Falla si la tabla no existe |
+| Value | Behavior |
+|-------|----------|
+| `WRITE_TRUNCATE` | Replace entire table (delete and recreate) |
+| `WRITE_APPEND` | Append data to existing table |
+| `WRITE_EMPTY` | Only write if table is empty (fails if has data) |
 
 ---
 
-## 📝 Schema Update Options
+## 🔧 create_disposition Values
 
-| Opción | Descripción |
+| Value | Behavior |
+|-------|----------|
+| `CREATE_IF_NEEDED` | Create table if not exists (default) |
+| `CREATE_NEVER` | Fail if table doesn't exist |
+
+---
+
+## 🔧 Schema Update Options
+
+| Option | Description |
 |--------|-------------|
-| `ALLOW_FIELD_ADDITION` | Permite agregar nuevas columnas al schema |
-| `ALLOW_FIELD_RELAXATION` | Permite cambiar campos REQUIRED a NULLABLE |
+| `ALLOW_FIELD_ADDITION` | Allow adding new columns to schema |
+| `ALLOW_FIELD_RELAXATION` | Allow changing REQUIRED to NULLABLE fields |
 
 ---
 
-## ✅ Buenas Prácticas
+## ✅ Best Practices
 
-1. **Usa `WRITE_TRUNCATE`** para reemplazos completos diarios
-2. **Usa `WRITE_APPEND`** para cargas incrementales
-3. **Usa `before_query`** para crear backups antes de cargar
-4. **Usa `after_query`** para validaciones y auditoría
-5. **Particiona tablas grandes** por fecha para mejor performance
-6. **Usa clustering** en campos frecuentemente filtrados
-7. **Define schema explícito** para producción (evita auto-detect)
-8. **Usa `schema_update_options`** con precaución en producción
-9. **Especifica `location`** para cumplir con regulaciones de datos
-10. **Agrega `job_labels`** para organización y tracking
+1. **Use `WRITE_TRUNCATE`** for complete daily replacements
+2. **Use `WRITE_APPEND`** for incremental loads
+3. **Use `before_query`** to create backups before loading
+4. **Use `after_query`** for validations and auditing
+5. **Partition large tables** by date for better performance
+6. **Use clustering** on frequently filtered fields
+7. **Define explicit schema** for production (avoid auto-detect)
+8. **Use `schema_update_options`** with caution in production
+9. **Specify `location`** to comply with data regulations
+10. **Add `job_labels`** for organization and tracking
 
 ---
 
-## ⚠️ Consideraciones Importantes
+## ⚠️ Important Considerations
 
-### Particionamiento
-- Solo se puede particionar por **UN** campo de fecha/timestamp
-- No se puede cambiar el particionamiento de una tabla existente
-- Considera el costo de escaneo vs. beneficio de performance
+### Partitioning
+- Can only partition by **ONE** date/timestamp field
+- Cannot change partitioning of existing table
+- Consider scan cost vs. performance benefit
 
 ### Clustering
-- Máximo **4 campos** para clustering
-- El orden de los campos importa (más selectivo primero)
-- Solo tiene efecto en tablas grandes (>1GB)
+- Maximum **4 fields** for clustering
+- Field order matters (most selective first)
+- Only effective on large tables (>1GB)
 
 ### Schema Updates
-- `ALLOW_FIELD_ADDITION` es seguro
-- `ALLOW_FIELD_RELAXATION` puede causar problemas si hay queries que asumen NOT NULL
-- No se pueden eliminar columnas con schema updates
+- `ALLOW_FIELD_ADDITION` is safe
+- `ALLOW_FIELD_RELAXATION` may cause issues if queries assume NOT NULL
+- Cannot delete columns with schema updates
 
-### Costos
-- Las operaciones de carga son **gratuitas**
-- Se cobra por almacenamiento y queries
-- Particionamiento reduce costos de queries
-
----
-
-## 🔗 Ver También
-
-- [GCPBigQueryOrigin](./GCPBigQueryOrigin_Guide.md) - Para extraer de BigQuery
-- [Open-Stage Documentation](../README.md) - Documentación completa
+### Costs
+- Load operations are **free**
+- Charged for storage and queries
+- Partitioning reduces query costs
 
 ---
 
-**Open-Stage v2.3** - Enterprise ETL Framework
+## 🔗 See Also
+
+- [GCPBigQueryOrigin](./GCPBigQueryOrigin.md) - For extracting from BigQuery
+- [Open-Stage Documentation](../README.md) - Complete documentation
+
+---
+
+**Open-Stage v2.4** - Enterprise ETL Framework

@@ -1,39 +1,39 @@
-# PostgresDestination - Guía de Uso
+# PostgresDestination - Usage Guide
 
-Componente para cargar datos a PostgreSQL con capacidades avanzadas.
-
----
-
-## 🎯 Características
-
-- ✅ Carga de DataFrames a PostgreSQL
-- ✅ Queries pre y post carga (`before_query`, `after_query`)
-- ✅ Control de disposición de escritura (FAIL, REPLACE, APPEND)
-- ✅ Timeout configurable
-- ✅ Carga optimizada con chunks y multi-insert
-- ✅ Logging detallado con estadísticas
+Component for loading data to PostgreSQL with advanced capabilities.
 
 ---
 
-## 📦 Instalación
+## 🎯 Features
+
+- ✅ DataFrame loading to PostgreSQL
+- ✅ Pre and post load queries (`before_query`, `after_query`)
+- ✅ Write disposition control (FAIL, REPLACE, APPEND)
+- ✅ Configurable timeout
+- ✅ Optimized loading with chunks and multi-insert
+- ✅ Detailed logging with statistics
+
+---
+
+## 📦 Installation
 ```bash
 pip install sqlalchemy psycopg2-binary pandas
 ```
 
 ---
 
-## 🚀 Uso Básico
+## 🚀 Basic Usage
 
-### Ejemplo 1: Carga Simple (APPEND)
+### Example 1: Simple Load (APPEND)
 ```python
 from src.postgres.common import PostgresDestination
 from src.core.base import Pipe
 from src.core.common import CSVOrigin
 
-# Leer datos
+# Read data
 origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")
 
-# Destino PostgreSQL
+# PostgreSQL destination
 destination = PostgresDestination(
     name="sales_loader",
     host="localhost",
@@ -42,10 +42,10 @@ destination = PostgresDestination(
     password="password",
     table="sales",
     schema="public",
-    if_exists="append"  # Agregar datos
+    if_exists="append"  # Append data
 )
 
-# Conectar y ejecutar
+# Connect and execute
 pipe = Pipe("pipe1")
 origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
@@ -53,9 +53,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 2: Reemplazar Tabla (REPLACE)
+### Example 2: Replace Table (REPLACE)
 ```python
-# Reemplazar todos los datos de la tabla
+# Replace all table data
 destination = PostgresDestination(
     name="daily_report",
     host="localhost",
@@ -64,7 +64,7 @@ destination = PostgresDestination(
     password="password",
     table="daily_summary",
     schema="reports",
-    if_exists="replace"  # ✨ Reemplazar tabla completa
+    if_exists="replace"  # ✨ Replace entire table
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -73,9 +73,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 3: Solo si Tabla No Existe (FAIL)
+### Example 3: Only if Table Doesn't Exist (FAIL)
 ```python
-# Fallar si la tabla ya existe (carga inicial)
+# Fail if table already exists (initial load)
 destination = PostgresDestination(
     name="initial_load",
     host="localhost",
@@ -84,7 +84,7 @@ destination = PostgresDestination(
     password="password",
     table="customers",
     schema="public",
-    if_exists="fail"  # ✨ Error si tabla existe
+    if_exists="fail"  # ✨ Error if table exists
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -93,11 +93,11 @@ origin.pump()
 
 ---
 
-## 🔧 Funcionalidades Avanzadas
+## 🔧 Advanced Features
 
-### Ejemplo 4: Before Query (Preparar Antes de Cargar)
+### Example 4: Before Query (Prepare Before Loading)
 ```python
-# Ejecutar query ANTES de cargar datos
+# Execute query BEFORE loading data
 destination = PostgresDestination(
     name="staged_load",
     host="localhost",
@@ -107,15 +107,15 @@ destination = PostgresDestination(
     table="orders",
     schema="public",
     before_query="""
-        -- Crear backup antes de cargar
+        -- Create backup before loading
         DROP TABLE IF EXISTS public.orders_backup;
         CREATE TABLE public.orders_backup AS
         SELECT * FROM public.orders;
         
-        -- Truncar tabla staging
+        -- Truncate staging table
         TRUNCATE TABLE staging.temp_orders;
         
-        -- Preparar secuencias
+        -- Prepare sequences
         SELECT setval('orders_id_seq', COALESCE(MAX(id), 1))
         FROM public.orders;
     """,
@@ -126,20 +126,20 @@ origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Casos de uso de `before_query`:**
-- Crear backups antes de cargar
-- Truncar tablas específicas
-- Preparar staging areas
-- Validar pre-condiciones
-- Limpiar datos antiguos
-- Resetear secuencias
-- Deshabilitar triggers temporalmente
+**Use cases for `before_query`:**
+- Create backups before loading
+- Truncate specific tables
+- Prepare staging areas
+- Validate pre-conditions
+- Clean old data
+- Reset sequences
+- Temporarily disable triggers
 
 ---
 
-### Ejemplo 5: After Query (Auditoría y Post-procesamiento)
+### Example 5: After Query (Auditing and Post-processing)
 ```python
-# Ejecutar query DESPUÉS de cargar datos
+# Execute query AFTER loading data
 destination = PostgresDestination(
     name="customer_loader",
     host="localhost",
@@ -150,7 +150,7 @@ destination = PostgresDestination(
     schema="public",
     if_exists="append",
     after_query="""
-        -- Registrar en log de auditoría
+        -- Log to audit
         INSERT INTO audit.load_log (
             table_name,
             loaded_at,
@@ -163,7 +163,7 @@ destination = PostgresDestination(
             'open-stage-pipeline'
         );
         
-        -- Actualizar metadata
+        -- Update metadata
         UPDATE control.table_metadata
         SET 
             last_updated = NOW(),
@@ -173,7 +173,7 @@ destination = PostgresDestination(
         -- Refresh materialized view
         REFRESH MATERIALIZED VIEW reports.customer_summary;
         
-        -- Analyze para estadísticas
+        -- Analyze for statistics
         ANALYZE public.customers;
     """
 )
@@ -182,21 +182,21 @@ origin.add_output_pipe(pipe).set_destination(destination)
 origin.pump()
 ```
 
-**Casos de uso de `after_query`:**
-- Logging de auditoría
-- Actualizar tablas de metadata
-- Ejecutar validaciones post-carga
-- Llamar stored procedures
-- Actualizar vistas materializadas
-- ANALYZE para actualizar estadísticas
-- Crear índices adicionales
-- Habilitar triggers nuevamente
+**Use cases for `after_query`:**
+- Audit logging
+- Update metadata tables
+- Execute post-load validations
+- Call stored procedures
+- Update materialized views
+- ANALYZE to update statistics
+- Create additional indexes
+- Re-enable triggers
 
 ---
 
-### Ejemplo 6: Workflow Completo (Before + After)
+### Example 6: Complete Workflow (Before + After)
 ```python
-# Pipeline completo con preparación y post-procesamiento
+# Complete pipeline with preparation and post-processing
 destination = PostgresDestination(
     name="sales_etl",
     host="localhost",
@@ -206,18 +206,18 @@ destination = PostgresDestination(
     table="sales_fact",
     schema="public",
     
-    # ANTES: Preparar
+    # BEFORE: Prepare
     before_query="""
-        -- Backup incremental con timestamp
+        -- Incremental backup with timestamp
         DROP TABLE IF EXISTS public.sales_fact_backup;
         CREATE TABLE public.sales_fact_backup AS
         SELECT *, NOW() as backup_timestamp
         FROM public.sales_fact;
         
-        -- Preparar staging
+        -- Prepare staging
         TRUNCATE TABLE staging.sales_staging;
         
-        -- Marcar inicio de carga en control
+        -- Mark load start in control
         INSERT INTO control.etl_status (
             table_name, status, start_time
         ) VALUES (
@@ -226,19 +226,19 @@ destination = PostgresDestination(
         ON CONFLICT (table_name) DO UPDATE
         SET status = 'LOADING', start_time = NOW();
         
-        -- Deshabilitar triggers para mejor performance
+        -- Disable triggers for better performance
         ALTER TABLE public.sales_fact DISABLE TRIGGER ALL;
     """,
     
     if_exists="replace",
-    timeout=600,  # 10 minutos
+    timeout=600,  # 10 minutes
     
-    # DESPUÉS: Validar y registrar
+    # AFTER: Validate and log
     after_query="""
-        -- Habilitar triggers nuevamente
+        -- Re-enable triggers
         ALTER TABLE public.sales_fact ENABLE TRIGGER ALL;
         
-        -- Validar datos cargados
+        -- Validate loaded data
         DO $$
         DECLARE
             invalid_count INTEGER;
@@ -252,11 +252,11 @@ destination = PostgresDestination(
             END IF;
         END $$;
         
-        -- Actualizar agregados
+        -- Update aggregates
         REFRESH MATERIALIZED VIEW CONCURRENTLY reports.sales_by_region;
         REFRESH MATERIALIZED VIEW CONCURRENTLY reports.sales_by_product;
         
-        -- Registrar éxito
+        -- Log success
         INSERT INTO audit.etl_runs (
             pipeline_name,
             table_name,
@@ -276,7 +276,7 @@ destination = PostgresDestination(
             )))
         );
         
-        -- Actualizar control
+        -- Update control
         UPDATE control.etl_status
         SET 
             status = 'COMPLETED',
@@ -284,7 +284,7 @@ destination = PostgresDestination(
             record_count = (SELECT COUNT(*) FROM public.sales_fact)
         WHERE table_name = 'sales_fact';
         
-        -- VACUUM ANALYZE para optimizar
+        -- VACUUM ANALYZE to optimize
         VACUUM ANALYZE public.sales_fact;
     """
 )
@@ -295,9 +295,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 7: Con Timeout
+### Example 7: With Timeout
 ```python
-# Control de tiempo para cargas grandes
+# Time control for large loads
 destination = PostgresDestination(
     name="large_load",
     host="localhost",
@@ -307,7 +307,7 @@ destination = PostgresDestination(
     table="big_table",
     schema="public",
     if_exists="append",
-    timeout=1800  # 30 minutos máximo
+    timeout=1800  # 30 minutes maximum
 )
 
 origin.add_output_pipe(pipe).set_destination(destination)
@@ -316,9 +316,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 8: Carga en Schema No-Public
+### Example 8: Load to Non-Public Schema
 ```python
-# Cargar datos en schema específico
+# Load data to specific schema
 destination = PostgresDestination(
     name="analytics_load",
     host="localhost",
@@ -326,7 +326,7 @@ destination = PostgresDestination(
     user="postgres",
     password="password",
     table="monthly_summary",
-    schema="analytics",  # Schema específico
+    schema="analytics",  # Specific schema
     if_exists="append"
 )
 
@@ -336,9 +336,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 9: Con Validaciones Pre y Post
+### Example 9: With Pre and Post Validations
 ```python
-# Validar antes y después de cargar
+# Validate before and after loading
 destination = PostgresDestination(
     name="validated_load",
     host="localhost",
@@ -349,16 +349,16 @@ destination = PostgresDestination(
     schema="public",
     
     before_query="""
-        -- Validar espacio disponible
+        -- Validate available space
         DO $$
         DECLARE
             free_space BIGINT;
         BEGIN
             SELECT pg_database_size(current_database()) INTO free_space;
-            -- Validaciones personalizadas aquí
+            -- Custom validations here
         END $$;
         
-        -- Verificar que la tabla destino existe
+        -- Verify destination table exists
         DO $$
         BEGIN
             IF NOT EXISTS (
@@ -374,7 +374,7 @@ destination = PostgresDestination(
     if_exists="append",
     
     after_query="""
-        -- Validar integridad referencial
+        -- Validate referential integrity
         DO $$
         DECLARE
             orphan_count INTEGER;
@@ -391,7 +391,7 @@ destination = PostgresDestination(
             END IF;
         END $$;
         
-        -- Verificar duplicados
+        -- Verify duplicates
         DO $$
         DECLARE
             dup_count INTEGER;
@@ -412,9 +412,9 @@ origin.pump()
 
 ---
 
-### Ejemplo 10: Carga con Índices Optimizados
+### Example 10: Load with Optimized Indexes
 ```python
-# Optimizar carga removiendo/recreando índices
+# Optimize load by removing/recreating indexes
 destination = PostgresDestination(
     name="optimized_load",
     host="localhost",
@@ -425,13 +425,13 @@ destination = PostgresDestination(
     schema="public",
     
     before_query="""
-        -- Guardar definiciones de índices
+        -- Save index definitions
         CREATE TEMP TABLE temp_indexes AS
         SELECT indexdef
         FROM pg_indexes
         WHERE schemaname = 'public' AND tablename = 'transactions';
         
-        -- Eliminar índices para carga más rápida
+        -- Drop indexes for faster loading
         DROP INDEX IF EXISTS idx_transactions_date;
         DROP INDEX IF EXISTS idx_transactions_customer;
         DROP INDEX IF EXISTS idx_transactions_amount;
@@ -440,7 +440,7 @@ destination = PostgresDestination(
     if_exists="append",
     
     after_query="""
-        -- Recrear índices
+        -- Recreate indexes
         CREATE INDEX idx_transactions_date 
             ON public.transactions(transaction_date);
         CREATE INDEX idx_transactions_customer 
@@ -448,7 +448,7 @@ destination = PostgresDestination(
         CREATE INDEX idx_transactions_amount 
             ON public.transactions(amount) WHERE amount > 1000;
         
-        -- ANALYZE después de crear índices
+        -- ANALYZE after creating indexes
         ANALYZE public.transactions;
     """
 )
@@ -459,7 +459,7 @@ origin.pump()
 
 ---
 
-## 📊 Output Ejemplo
+## 📊 Example Output
 ```
 PostgresDestination 'sales_etl' received data from pipe: 'pipe1'
 PostgresDestination 'sales_etl' engine initialized successfully
@@ -467,7 +467,7 @@ Connection: postgres@localhost:5432/warehouse
   - Timeout: 600.0s
 
 PostgresDestination 'sales_etl' executing before_query...
-  Query preview: -- Backup incremental con timestamp
+  Query preview: -- Incremental backup with timestamp
         DROP TABLE IF EXISTS public.sales_fact_backup;...
 ✅ PostgresDestination 'sales_etl' before_query executed successfully
   - Rows affected: 15,432
@@ -508,7 +508,7 @@ PostgresDestination 'sales_etl' LOAD completed successfully:
      - ...
 
 PostgresDestination 'sales_etl' executing after_query...
-  Query preview: -- Habilitar triggers nuevamente
+  Query preview: -- Re-enable triggers
         ALTER TABLE public.sales_fact ENABLE TRIGGER ALL;...
 ✅ PostgresDestination 'sales_etl' after_query executed successfully
   - Rows affected: 3
@@ -522,85 +522,85 @@ PostgresDestination 'sales_etl' connection closed
 
 ---
 
-## 📋 Parámetros Completos
+## 📋 Complete Parameters
 
-| Parámetro | Tipo | Requerido | Default | Descripción |
-|-----------|------|-----------|---------|-------------|
-| `name` | str | ✅ | - | Nombre del componente |
-| `host` | str | ✅ | - | Host de PostgreSQL |
-| `port` | int | ❌ | 5432 | Puerto de PostgreSQL |
-| `database` | str | ✅ | - | Nombre de la base de datos |
-| `user` | str | ✅ | - | Usuario de PostgreSQL |
-| `password` | str | ✅ | - | Contraseña |
-| `table` | str | ✅ | - | Nombre de la tabla |
-| `schema` | str | ❌ | 'public' | Schema de PostgreSQL |
-| `if_exists` | str | ❌ | 'append' | Modo de escritura |
-| `before_query` | str | ❌ | None | Query a ejecutar ANTES |
-| `after_query` | str | ❌ | None | Query a ejecutar DESPUÉS |
-| `timeout` | float | ❌ | None | Timeout en segundos |
-
----
-
-## 🔧 Valores de if_exists
-
-| Valor | Comportamiento |
-|-------|----------------|
-| `append` | Agrega datos a la tabla existente (default) |
-| `replace` | Elimina y recrea la tabla con los nuevos datos |
-| `fail` | Error si la tabla ya existe |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | str | ✅ | - | Component name |
+| `host` | str | ✅ | - | PostgreSQL host |
+| `port` | int | ❌ | 5432 | PostgreSQL port |
+| `database` | str | ✅ | - | Database name |
+| `user` | str | ✅ | - | PostgreSQL username |
+| `password` | str | ✅ | - | Password |
+| `table` | str | ✅ | - | Table name |
+| `schema` | str | ❌ | 'public' | PostgreSQL schema |
+| `if_exists` | str | ❌ | 'append' | Write mode |
+| `before_query` | str | ❌ | None | Query to execute BEFORE |
+| `after_query` | str | ❌ | None | Query to execute AFTER |
+| `timeout` | float | ❌ | None | Timeout in seconds |
 
 ---
 
-## ✅ Buenas Prácticas
+## 🔧 if_exists Values
 
-1. **Usa `append`** para cargas incrementales
-2. **Usa `replace`** para reemplazos completos diarios
-3. **Usa `before_query`** para crear backups antes de cargar
-4. **Usa `after_query`** para validaciones y auditoría
-5. **Deshabilita triggers** en `before_query` para mejor performance
-6. **Habilita triggers** en `after_query` después de cargar
-7. **Ejecuta `ANALYZE`** en `after_query` para actualizar estadísticas
-8. **Usa `VACUUM`** después de cargas grandes
-9. **Especifica `timeout`** para cargas grandes
-10. **Valida datos** en `after_query` antes de confirmar éxito
-11. **Elimina índices** antes de cargas grandes y recréalos después
-12. **Usa transacciones** en before/after queries cuando sea necesario
+| Value | Behavior |
+|-------|----------|
+| `append` | Append data to existing table (default) |
+| `replace` | Drop and recreate table with new data |
+| `fail` | Error if table already exists |
 
 ---
 
-## ⚠️ Consideraciones Importantes
+## ✅ Best Practices
+
+1. **Use `append`** for incremental loads
+2. **Use `replace`** for complete daily replacements
+3. **Use `before_query`** to create backups before loading
+4. **Use `after_query`** for validations and auditing
+5. **Disable triggers** in `before_query` for better performance
+6. **Enable triggers** in `after_query` after loading
+7. **Execute `ANALYZE`** in `after_query` to update statistics
+8. **Use `VACUUM`** after large loads
+9. **Specify `timeout`** for large loads
+10. **Validate data** in `after_query` before confirming success
+11. **Drop indexes** before large loads and recreate after
+12. **Use transactions** in before/after queries when necessary
+
+---
+
+## ⚠️ Important Considerations
 
 ### Performance
-- La carga usa `chunksize=1000` para procesar en lotes
-- Usa `method='multi'` para INSERTs optimizados
-- Considera deshabilitar triggers en cargas grandes
-- Elimina índices antes de cargar y recréalos después
-- Ejecuta `VACUUM ANALYZE` después de cargas grandes
+- Load uses `chunksize=1000` to process in batches
+- Uses `method='multi'` for optimized INSERTs
+- Consider disabling triggers on large loads
+- Drop indexes before loading and recreate after
+- Execute `VACUUM ANALYZE` after large loads
 
 ### Schemas
-- El schema por defecto es `public`
-- Especifica schema explícitamente si usas otros schemas
-- El usuario debe tener permisos en el schema destino
+- Default schema is `public`
+- Specify schema explicitly if using other schemas
+- User must have permissions on destination schema
 
-### Modos de Escritura
-- `append`: Más rápido, agrega datos
-- `replace`: Elimina tabla completa y recrea (DROP + CREATE)
-- `fail`: Útil para cargas iniciales (previene sobrescritura)
+### Write Modes
+- `append`: Faster, adds data
+- `replace`: Drops entire table and recreates (DROP + CREATE)
+- `fail`: Useful for initial loads (prevents overwriting)
 
 ### Timeout
-- Se aplica tanto a la conexión inicial como a queries
-- Útil para cargas muy grandes
-- Si una operación supera el timeout, lanza excepción
+- Applies to both initial connection and queries
+- Useful for very large loads
+- If operation exceeds timeout, raises exception
 
-### Transacciones
-- Cada operación (before, load, after) usa su propia transacción
-- Si `after_query` falla, los datos YA están cargados
-- Usa transacciones explícitas en before/after si necesitas rollback
+### Transactions
+- Each operation (before, load, after) uses its own transaction
+- If `after_query` fails, data is ALREADY loaded
+- Use explicit transactions in before/after if you need rollback
 
-### Permisos
-- El usuario necesita permisos CREATE/INSERT/UPDATE/DELETE
-- Para `replace` necesita permisos DROP TABLE
-- Para schemas no-public, necesita permisos en ese schema
+### Permissions
+- User needs CREATE/INSERT/UPDATE/DELETE permissions
+- For `replace` needs DROP TABLE permissions
+- For non-public schemas, needs permissions on that schema
 
 ---
 
@@ -608,62 +608,62 @@ PostgresDestination 'sales_etl' connection closed
 
 ### Error: "Table already exists"
 ```python
-# Solución 1: Usar append
+# Solution 1: Use append
 if_exists="append"
 
-# Solución 2: Usar replace
+# Solution 2: Use replace
 if_exists="replace"
 
-# Solución 3: Eliminar tabla en before_query
+# Solution 3: Drop table in before_query
 before_query="DROP TABLE IF EXISTS schema.table;"
 ```
 
 ### Error: "Permission denied for schema"
 ```sql
--- Verificar permisos
+-- Verify permissions
 SELECT has_schema_privilege('username', 'schema_name', 'CREATE');
 
--- Otorgar permisos
+-- Grant permissions
 GRANT CREATE, USAGE ON SCHEMA schema_name TO username;
 ```
 
 ### Error: "Timeout exceeded"
 ```python
-# Aumentar timeout
-timeout=1800  # 30 minutos
+# Increase timeout
+timeout=1800  # 30 minutes
 
-# O dividir carga en chunks más pequeños
+# Or split load into smaller chunks
 ```
 
-### Carga muy lenta
+### Very Slow Load
 ```python
-# Optimizar con before_query y after_query
+# Optimize with before_query and after_query
 before_query="""
-    -- Eliminar índices
+    -- Drop indexes
     DROP INDEX IF EXISTS idx_table_field;
     
-    -- Deshabilitar triggers
+    -- Disable triggers
     ALTER TABLE schema.table DISABLE TRIGGER ALL;
 """
 
 after_query="""
-    -- Recrear índices
+    -- Recreate indexes
     CREATE INDEX idx_table_field ON schema.table(field);
     
-    -- Habilitar triggers
+    -- Enable triggers
     ALTER TABLE schema.table ENABLE TRIGGER ALL;
     
-    -- Actualizar estadísticas
+    -- Update statistics
     ANALYZE schema.table;
 """
 ```
 
 ---
 
-## 🔗 Ver También
+## 🔗 See Also
 
-- [PostgresOrigin](./PostgresOrigin.md) - Para extraer de PostgreSQL
-- [Open-Stage Documentation](../README.md) - Documentación completa
+- [PostgresOrigin](./PostgresOrigin.md) - For extracting from PostgreSQL
+- [Open-Stage Documentation](../README.md) - Complete documentation
 
 ---
 

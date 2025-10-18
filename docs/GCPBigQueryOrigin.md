@@ -1,44 +1,44 @@
-# GCPBigQueryOrigin - Guía de Uso
+# GCPBigQueryOrigin - Usage Guide
 
-Componente para extraer datos de Google BigQuery con capacidades avanzadas.
-
----
-
-## 🎯 Características
-
-- ✅ Lectura directa de tablas o queries personalizadas
-- ✅ Queries pre y post extracción (`before_query`, `after_query`)
-- ✅ Límite de resultados para testing (`max_results`)
-- ✅ Validación de queries sin ejecutar (`dry_run`)
-- ✅ Queries parametrizadas
-- ✅ Estimación de costos automática
-- ✅ Logging detallado
+Component for extracting data from Google BigQuery with advanced capabilities.
 
 ---
 
-## 📦 Instalación
+## 🎯 Features
+
+- ✅ Direct table reading or custom queries
+- ✅ Pre and post extraction queries (`before_query`, `after_query`)
+- ✅ Result limit for testing (`max_results`)
+- ✅ Query validation without execution (`dry_run`)
+- ✅ Parameterized queries
+- ✅ Automatic cost estimation
+- ✅ Detailed logging
+
+---
+
+## 📦 Installation
 ```bash
 pip install google-cloud-bigquery google-auth db-dtypes
 ```
 
 ---
 
-## 🚀 Uso Básico
+## 🚀 Basic Usage
 
-### Ejemplo 1: Query Simple
+### Example 1: Simple Query
 ```python
 from src.google.cloud import GCPBigQueryOrigin
 from src.core.base import Pipe
 from src.core.common import Printer
 
-# Crear origen con query
+# Create origin with query
 origin = GCPBigQueryOrigin(
     name="sales_data",
     project_id="my-project",
     query="SELECT * FROM dataset.sales WHERE date >= '2024-01-01'"
 )
 
-# Conectar y ejecutar
+# Connect and execute
 pipe = Pipe("pipe1")
 printer = Printer("output")
 
@@ -48,13 +48,13 @@ origin.pump()
 
 ---
 
-### Ejemplo 2: Lectura Directa de Tabla
+### Example 2: Direct Table Reading
 ```python
-# Leer tabla completa sin escribir SELECT *
+# Read full table without writing SELECT *
 origin = GCPBigQueryOrigin(
     name="customers",
     project_id="my-project",
-    table="dataset.customers"  # ✨ Más simple!
+    table="dataset.customers"  # ✨ Simpler!
 )
 
 origin.add_output_pipe(pipe).set_destination(printer)
@@ -63,14 +63,14 @@ origin.pump()
 
 ---
 
-### Ejemplo 3: Límite para Testing
+### Example 3: Limit for Testing
 ```python
-# Solo extraer 100 filas para pruebas
+# Extract only 100 rows for testing
 origin = GCPBigQueryOrigin(
     name="sales_sample",
     project_id="my-project",
     table="dataset.sales",
-    max_results=100  # ✨ Rápido para desarrollo
+    max_results=100  # ✨ Fast for development
 )
 
 origin.add_output_pipe(pipe).set_destination(printer)
@@ -79,16 +79,16 @@ origin.pump()
 
 ---
 
-## 🔧 Funcionalidades Avanzadas
+## 🔧 Advanced Features
 
-### Ejemplo 4: Dry Run (Validar y Estimar Costos)
+### Example 4: Dry Run (Validate and Estimate Costs)
 ```python
-# Validar query SIN ejecutar
+# Validate query WITHOUT executing
 origin = GCPBigQueryOrigin(
     name="cost_check",
     project_id="my-project",
     query="SELECT * FROM `bigquery-public-data.usa_names.usa_1910_current`",
-    dry_run=True  # ✨ Solo valida y estima costo
+    dry_run=True  # ✨ Only validates and estimates cost
 )
 
 origin.add_output_pipe(pipe).set_destination(printer)
@@ -102,14 +102,14 @@ origin.pump()
 
 ---
 
-### Ejemplo 5: Before Query (Preparar Datos)
+### Example 5: Before Query (Prepare Data)
 ```python
-# Ejecutar query ANTES de la extracción
+# Execute query BEFORE extraction
 origin = GCPBigQueryOrigin(
     name="processed_sales",
     project_id="my-project",
     before_query="""
-        -- Crear tabla temporal con datos filtrados
+        -- Create temporary table with filtered data
         CREATE TEMP TABLE temp_sales AS
         SELECT * FROM dataset.raw_sales
         WHERE status = 'completed'
@@ -122,23 +122,23 @@ origin.add_output_pipe(pipe).set_destination(printer)
 origin.pump()
 ```
 
-**Casos de uso de `before_query`:**
-- Crear tablas temporales
-- Llamar stored procedures
-- Preparar datos antes de extraer
-- Limpiar staging areas
+**Use cases for `before_query`:**
+- Create temporary tables
+- Call stored procedures
+- Prepare data before extraction
+- Clean staging areas
 
 ---
 
-### Ejemplo 6: After Query (Auditoría)
+### Example 6: After Query (Auditing)
 ```python
-# Ejecutar query DESPUÉS de la extracción
+# Execute query AFTER extraction
 origin = GCPBigQueryOrigin(
     name="customer_extract",
     project_id="my-project",
     table="crm.customers",
     after_query="""
-        -- Registrar la extracción
+        -- Log the extraction
         INSERT INTO `my-project.audit.extraction_log` (
             table_name,
             extracted_at,
@@ -155,24 +155,24 @@ origin.add_output_pipe(pipe).set_destination(printer)
 origin.pump()
 ```
 
-**Casos de uso de `after_query`:**
-- Logging de auditoría
-- Marcar registros como procesados
-- Actualizar timestamps
-- Limpiar tablas temporales
+**Use cases for `after_query`:**
+- Audit logging
+- Mark records as processed
+- Update timestamps
+- Clean temporary tables
 
 ---
 
-### Ejemplo 7: Workflow Completo (Before + After)
+### Example 7: Complete Workflow (Before + After)
 ```python
-# Pipeline completo con preparación y limpieza
+# Complete pipeline with preparation and cleanup
 origin = GCPBigQueryOrigin(
     name="daily_sales_etl",
     project_id="my-project",
     
-    # ANTES: Preparar staging
+    # BEFORE: Prepare staging
     before_query="""
-        -- Crear tabla staging
+        -- Create staging table
         CREATE OR REPLACE TABLE `my-project.staging.daily_sales` AS
         SELECT 
             DATE(order_timestamp) as sale_date,
@@ -184,16 +184,16 @@ origin = GCPBigQueryOrigin(
         WHERE DATE(order_timestamp) = CURRENT_DATE()
         AND status = 'completed';
         
-        -- Validar datos
+        -- Validate data
         CALL `my-project.procedures.validate_sales`();
     """,
     
-    # QUERY PRINCIPAL
+    # MAIN QUERY
     query="SELECT * FROM `my-project.staging.daily_sales`",
     
-    # DESPUÉS: Registrar y limpiar
+    # AFTER: Log and cleanup
     after_query="""
-        -- Registrar ejecución
+        -- Log execution
         INSERT INTO `my-project.audit.etl_runs` (
             pipeline_name,
             run_timestamp,
@@ -204,7 +204,7 @@ origin = GCPBigQueryOrigin(
             (SELECT COUNT(*) FROM `my-project.staging.daily_sales`)
         );
         
-        -- Limpiar tablas temporales
+        -- Clean temporary tables
         DROP TABLE IF EXISTS `my-project.staging.temp_processing`;
     """
 )
@@ -215,11 +215,11 @@ origin.pump()
 
 ---
 
-### Ejemplo 8: Queries Parametrizadas
+### Example 8: Parameterized Queries
 ```python
 from google.cloud import bigquery
 
-# Query segura con parámetros
+# Secure query with parameters
 origin = GCPBigQueryOrigin(
     name="filtered_sales",
     project_id="my-project",
@@ -240,16 +240,16 @@ origin.pump()
 
 ---
 
-### Ejemplo 9: Con Credenciales y Location
+### Example 9: With Credentials and Location
 ```python
-# Usar service account y región específica
+# Use service account and specific region
 origin = GCPBigQueryOrigin(
     name="secure_extract",
     project_id="my-project",
     table="dataset.sensitive_data",
     credentials_path="/path/to/service-account.json",
-    location="US",  # Región de BigQuery
-    timeout=300,    # Timeout de 5 minutos
+    location="US",  # BigQuery region
+    timeout=300,    # 5 minute timeout
     job_labels={
         "team": "data-engineering",
         "env": "production"
@@ -262,7 +262,7 @@ origin.pump()
 
 ---
 
-## 📊 Output Ejemplo
+## 📊 Example Output
 ```
 GCPBigQueryOrigin 'daily_sales_etl' using default credentials
 GCPBigQueryOrigin 'daily_sales_etl' BigQuery client initialized successfully
@@ -314,47 +314,47 @@ GCPBigQueryOrigin 'daily_sales_etl' executing after_query...
 
 ---
 
-## 📋 Parámetros Completos
+## 📋 Complete Parameters
 
-| Parámetro | Tipo | Requerido | Default | Descripción |
-|-----------|------|-----------|---------|-------------|
-| `name` | str | ✅ | - | Nombre del componente |
-| `project_id` | str | ✅ | - | ID del proyecto GCP |
-| `query` | str | * | None | Query SQL a ejecutar |
-| `table` | str | * | None | Tabla en formato `dataset.table` |
-| `credentials_path` | str | ❌ | None | Ruta al JSON de service account |
-| `before_query` | str | ❌ | None | Query a ejecutar ANTES |
-| `after_query` | str | ❌ | None | Query a ejecutar DESPUÉS |
-| `max_results` | int | ❌ | None | Límite de filas a retornar |
-| `use_legacy_sql` | bool | ❌ | False | Usar SQL legacy |
-| `query_parameters` | list | ❌ | [] | Parámetros para queries |
-| `location` | str | ❌ | None | Región de BigQuery |
-| `job_labels` | dict | ❌ | {} | Labels del job |
-| `timeout` | float | ❌ | None | Timeout en segundos |
-| `use_query_cache` | bool | ❌ | True | Usar cache de BigQuery |
-| `dry_run` | bool | ❌ | False | Solo validar sin ejecutar |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | str | ✅ | - | Component name |
+| `project_id` | str | ✅ | - | GCP project ID |
+| `query` | str | * | None | SQL query to execute |
+| `table` | str | * | None | Table in format `dataset.table` |
+| `credentials_path` | str | ❌ | None | Path to service account JSON |
+| `before_query` | str | ❌ | None | Query to execute BEFORE |
+| `after_query` | str | ❌ | None | Query to execute AFTER |
+| `max_results` | int | ❌ | None | Row limit to return |
+| `use_legacy_sql` | bool | ❌ | False | Use legacy SQL |
+| `query_parameters` | list | ❌ | [] | Query parameters |
+| `location` | str | ❌ | None | BigQuery region |
+| `job_labels` | dict | ❌ | {} | Job labels |
+| `timeout` | float | ❌ | None | Timeout in seconds |
+| `use_query_cache` | bool | ❌ | True | Use BigQuery cache |
+| `dry_run` | bool | ❌ | False | Only validate without executing |
 
-\* **Nota**: Debes proporcionar `query` O `table`, pero no ambos.
-
----
-
-## ✅ Buenas Prácticas
-
-1. **Usa `dry_run`** antes de ejecutar queries grandes para estimar costos
-2. **Usa `max_results`** en desarrollo para pruebas rápidas
-3. **Usa `before_query`** para preparar datos y staging
-4. **Usa `after_query`** para auditoría y cleanup
-5. **Usa `query_parameters`** en lugar de concatenar strings (seguridad)
-6. **Usa `table`** cuando solo necesites `SELECT *` (más simple)
-7. **Especifica `location`** si trabajas con datos en regiones específicas
+\* **Note**: You must provide `query` OR `table`, but not both.
 
 ---
 
-## 🔗 Ver También
+## ✅ Best Practices
 
-- [GCPBigQueryDestination](./GCPBigQueryDestination.md) - Para escribir a BigQuery
-- [Open-Stage Documentation](../README.md) - Documentación completa
+1. **Use `dry_run`** before running large queries to estimate costs
+2. **Use `max_results`** in development for quick testing
+3. **Use `before_query`** to prepare data and staging
+4. **Use `after_query`** for auditing and cleanup
+5. **Use `query_parameters`** instead of string concatenation (security)
+6. **Use `table`** when you only need `SELECT *` (simpler)
+7. **Specify `location`** if working with data in specific regions
 
 ---
 
-**Open-Stage v2.3** - Enterprise ETL Framework
+## 🔗 See Also
+
+- [GCPBigQueryDestination](./GCPBigQueryDestination.md) - For writing to BigQuery
+- [Open-Stage Documentation](../README.md) - Complete documentation
+
+---
+
+**Open-Stage v2.4** - Enterprise ETL Framework
