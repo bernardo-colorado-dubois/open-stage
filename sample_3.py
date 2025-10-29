@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
 from src.core.base import Pipe
-from src.core.common import  Printer
+from src.core.common import  Printer,DeleteColumns
 from src.postgres.common import PostgresOrigin
 
 load_dotenv()
@@ -21,22 +21,15 @@ postgres_origin = PostgresOrigin(
   database=PSQL_DB_NAME,
   user=PSQL_DB_USER,
   password=PSQL_DB_PASSWORD,
-  query="""
-    SELECT id, 
-      nombre, 
-      descripcion, 
-      activo, 
-      created_at, 
-      updated_at 
-    FROM public.categorias;
-  """
+  table="public.productos"
 )
 
-postgres_pipe = Pipe(name="postgres_pipe")
+productos_deleter = DeleteColumns(
+  name="productos_deleter",
+  columns=["descripcion","imagen_url","proveedor_id","stock_actual","stock_minimo","fecha_caducidad","imagen_url","activo","created_at","updated_at"]
+)
 
-postgres_printer = Printer(name="postgres_printer")
 
-postgres_origin.add_output_pipe(postgres_pipe).set_destination(postgres_printer)
-
+postgres_origin.add_output_pipe(Pipe(name="productos")).set_destination(productos_deleter).add_output_pipe(Pipe(name="prouctos_reducidos")).set_destination(Printer(name="productos_printer"))
 postgres_origin.pump()
 

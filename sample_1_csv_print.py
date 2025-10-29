@@ -34,10 +34,6 @@ coffee_sales_csv_origin = CSVOrigin(
   header=None,
 )
 
-coffee_sales_pipe = Pipe(name='coffee_sales_pipe')
-
-coffee_sales_printer = Printer(name='coffee_sales_printer')
-
-coffee_sales_csv_origin.add_output_pipe(coffee_sales_pipe).set_destination(coffee_sales_printer)
+coffee_sales_csv_origin.add_output_pipe(Pipe(name='coffee_sales_pipe')).set_destination(Printer(name='coffee_sales_printer'))
 
 coffee_sales_csv_origin.pump()

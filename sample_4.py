@@ -30,8 +30,6 @@ csv_iris = CSVOrigin(
     }
 )
 
-iris_pipe_a = Pipe(name='iris_pipe')
-
 iris_bigquery = GCPBigQueryDestination(
     name="iris_bq_destination",
     project_id=GCP_PROJECT_ID,
@@ -41,6 +39,6 @@ iris_bigquery = GCPBigQueryDestination(
     credentials_path=GCP_CREDENTIALS_FILE_PATH
 )
 
-csv_iris.add_output_pipe(iris_pipe_a).set_destination(iris_bigquery)
+csv_iris.add_output_pipe(Pipe(name='iris_pipe')).set_destination(iris_bigquery)
 
 csv_iris.pump()
