@@ -222,7 +222,7 @@ classDiagram
 | `DeleteColumns` | Removes specified columns |
 | `RemoveDuplicates` | Deduplicates based on key field |
 | `Joiner` | Joins two DataFrames (2→1) |
-| `Transformer` | Applies custom functions |
+| `Transformer` | Applies custom functions with flexible arguments ✨ **v2.4** |
 
 #### 🤖 AI Transformers - 1→1
 
@@ -314,7 +314,52 @@ graph LR
     style C fill:#7ED321,stroke:#5FA319,stroke-width:2px,color:#fff
 ```
 
-### Example 3: MySQL with Advanced Features ✨ NEW v2.4
+### Example 3: Custom Transformation with Arguments ✨ NEW v2.4
+```python
+from src.core.common import CSVOrigin, Transformer, CSVDestination
+from src.core.base import Pipe
+
+# Define custom transformation function
+def calculate_price_with_tax(df, tax_rate, shipping_cost, discount_threshold):
+    # Calculate final price
+    df['tax_amount'] = df['price'] * tax_rate
+    df['shipping'] = shipping_cost
+    df['subtotal'] = df['price'] + df['tax_amount'] + df['shipping']
+    
+    # Apply discount for high-value purchases
+    df['discount'] = 0
+    df.loc[df['price'] > discount_threshold, 'discount'] = df['price'] * 0.10
+    df['final_price'] = df['subtotal'] - df['discount']
+    
+    return df
+
+# Read data
+origin = CSVOrigin("reader", filepath_or_buffer="products.csv")
+
+# Apply transformation with custom arguments
+transformer = Transformer(
+    name="price_calculator",
+    transformer_function=calculate_price_with_tax,
+    transformer_kwargs={
+        'tax_rate': 0.16,          # 16% tax
+        'shipping_cost': 50,        # Fixed shipping
+        'discount_threshold': 1000  # Discount for purchases > 1000
+    }
+)
+
+# Write results
+dest = CSVDestination("writer", path_or_buf="products_priced.csv", index=False)
+
+# Connect pipeline
+pipe1, pipe2 = Pipe("input"), Pipe("output")
+origin.add_output_pipe(pipe1).set_destination(transformer)
+transformer.add_output_pipe(pipe2).set_destination(dest)
+
+# Execute
+origin.pump()
+```
+
+### Example 4: MySQL with Advanced Features ✨ v2.4
 ```python
 from src.mysql.common import MySQLOrigin, MySQLDestination
 from src.core.common import Filter
@@ -892,6 +937,9 @@ Contributions are welcome! To contribute:
 - ✅ PostgresDestination: before_query, after_query, timeout ✨ **v2.4**
 - ✅ MySQLOrigin: before_query, after_query, timeout, max_results, query_parameters, table ✨ **NEW v2.4**
 - ✅ MySQLDestination: before_query, after_query, timeout ✨ **NEW v2.4**
+
+### Completed Component Enhancements
+- ✅ Transformer: transformer_kwargs for flexible function arguments (like Airflow's op_kwargs) ✨ **NEW v2.4**
 
 ### Pending AI Providers
 - [ ] Mistral AI Transformer

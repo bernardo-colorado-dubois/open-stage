@@ -1,8 +1,9 @@
 
 import pandas as pd
 import requests
-
 from src.core.base import DataPackage, Pipe, Origin, Destination, Node
+from typing import Callable, Optional, Dict, Any
+import inspect
 
 class Generator(Origin):
   def __init__(self, name: str, length: int):
@@ -747,28 +748,232 @@ class Joiner(Node):
     self.received_dfs = {}
     self.received_inputs = 0
     
-    
-    
+
 class Transformer(Node):
-  def __init__(self, name: str, transformer_function):
+  """
+  Transformer - Custom Function Transformer
+  =========================================
+  Applies a custom transformation function to a DataFrame with support
+  for additional arguments.
+  
+  Connectivity: 1 → 1 (inherits from Node)
+  
+  Parameters
+  ----------
+  name : str
+    Component name
+  transformer_function : callable
+    Function that transforms the DataFrame. Must accept DataFrame as first
+    parameter and return a transformed DataFrame.
+    Signature: func(df: pd.DataFrame, **kwargs) -> pd.DataFrame
+  transformer_kwargs : dict, optional
+    Dictionary of additional keyword arguments to pass to the transformer
+    function. Similar to op_kwargs in Airflow's PythonOperator.
+    Default: {}
+  
+  Examples
+  --------
+  # Example 1: Simple transformation without extra arguments
+  >>> def uppercase_names(df):
+  ...     df['name'] = df['name'].str.upper()
+  ...     return df
+  >>> 
+  >>> transformer = Transformer(
+  ...     name="uppercase",
+  ...     transformer_function=uppercase_names
+  ... )
+  
+  # Example 2: Transformation with extra arguments
+  >>> def multiply_column(df, column, multiplier, add_value=0):
+  ...     df[column] = df[column] * multiplier + add_value
+  ...     return df
+  >>> 
+  >>> transformer = Transformer(
+  ...     name="price_calculator",
+  ...     transformer_function=multiply_column,
+  ...     transformer_kwargs={
+  ...         'column': 'price',
+  ...         'multiplier': 1.15,
+  ...         'add_value': 10
+  ...     }
+  ... )
+  
+  # Example 3: Complex transformation with multiple parameters
+  >>> def filter_and_enrich(df, min_value, max_value, category, new_column_name):
+  ...     # Filter
+  ...     df = df[(df['value'] >= min_value) & (df['value'] <= max_value)]
+  ...     # Enrich
+  ...     df[new_column_name] = category
+  ...     return df
+  >>> 
+  >>> transformer = Transformer(
+  ...     name="filter_enrich",
+  ...     transformer_function=filter_and_enrich,
+  ...     transformer_kwargs={
+  ...         'min_value': 100,
+  ...         'max_value': 1000,
+  ...         'category': 'premium',
+  ...         'new_column_name': 'segment'
+  ...     }
+  ... )
+  
+  # Example 4: Using lambda function
+  >>> transformer = Transformer(
+  ...     name="add_tax",
+  ...     transformer_function=lambda df, tax_rate: df.assign(
+  ...         total=df['price'] * (1 + tax_rate)
+  ...     ),
+  ...     transformer_kwargs={'tax_rate': 0.16}
+  ... )
+  
+  # Example 5: Pipeline with multiple transformers
+  >>> from src.core.common import CSVOrigin, Printer
+  >>> from src.core.base import Pipe
+  >>> 
+  >>> # Functions
+  >>> def clean_data(df, columns_to_drop):
+  ...     return df.drop(columns=columns_to_drop, errors='ignore')
+  >>> 
+  >>> def calculate_metrics(df, revenue_col, cost_col, margin_col):
+  ...     df[margin_col] = df[revenue_col] - df[cost_col]
+  ...     return df
+  >>> 
+  >>> # Components
+  >>> origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")
+  >>> 
+  >>> cleaner = Transformer(
+  ...     name="cleaner",
+  ...     transformer_function=clean_data,
+  ...     transformer_kwargs={'columns_to_drop': ['temp_id', 'debug_flag']}
+  ... )
+  >>> 
+  >>> calculator = Transformer(
+  ...     name="calculator",
+  ...     transformer_function=calculate_metrics,
+  ...     transformer_kwargs={
+  ...         'revenue_col': 'revenue',
+  ...         'cost_col': 'cost',
+  ...         'margin_col': 'margin'
+  ...     }
+  ... )
+  >>> 
+  >>> printer = Printer("output")
+  >>> 
+  >>> # Pipeline
+  >>> pipe1 = Pipe("pipe1")
+  >>> pipe2 = Pipe("pipe2")
+  >>> pipe3 = Pipe("pipe3")
+  >>> 
+  >>> origin.add_output_pipe(pipe1).set_destination(cleaner)
+  >>> cleaner.add_output_pipe(pipe2).set_destination(calculator)
+  >>> calculator.add_output_pipe(pipe3).set_destination(printer)
+  >>> 
+  >>> origin.pump()
+  """
+  
+  def __init__(
+    self,
+    name: str,
+    transformer_function: Callable,
+    transformer_kwargs: Optional[Dict[str, Any]] = None
+  ):
     super().__init__()
     self.name = name
     self.transformer_function = transformer_function
-    self.received_df = None  # Para almacenar el DataFrame de entrada
+    self.transformer_kwargs = transformer_kwargs or {}
+    self.received_df = None
+    
+    # Validar que transformer_function no esté vacío
+    if transformer_function is None:
+      raise ValueError(f"Transformer '{self.name}': transformer_function cannot be None")
     
     # Validar que transformer_function sea callable
-    if not callable(self.transformer_function):
-      raise ValueError(f"Transformer '{self.name}': transformer_function must be callable, got {type(self.transformer_function)}")
+    if not callable(transformer_function):
+      raise ValueError(
+        f"Transformer '{self.name}': transformer_function must be callable (function or lambda), "
+        f"got {type(transformer_function)}"
+      )
+    
+    # Validar que transformer_kwargs sea un diccionario
+    if not isinstance(self.transformer_kwargs, dict):
+      raise ValueError(
+        f"Transformer '{self.name}': transformer_kwargs must be a dictionary, "
+        f"got {type(self.transformer_kwargs)}"
+      )
+    
+    # Validar la firma de la función
+    try:
+      sig = inspect.signature(transformer_function)
+      params = list(sig.parameters.keys())
+      
+      # La función debe aceptar al menos un parámetro (el DataFrame)
+      if len(params) == 0:
+        raise ValueError(
+          f"Transformer '{self.name}': transformer_function must accept at least one parameter (DataFrame)"
+        )
+      
+      # Si hay transformer_kwargs, verificar que los parámetros existan en la función
+      if self.transformer_kwargs:
+        func_params = set(params[1:])  # Excluir el primer parámetro (df)
+        
+        # Obtener parámetros que aceptan **kwargs
+        has_var_keyword = any(
+          p.kind == inspect.Parameter.VAR_KEYWORD 
+          for p in sig.parameters.values()
+        )
+        
+        if not has_var_keyword:
+          # Verificar que todos los kwargs proporcionados existan en la función
+          provided_kwargs = set(self.transformer_kwargs.keys())
+          invalid_kwargs = provided_kwargs - func_params
+          
+          if invalid_kwargs:
+            raise ValueError(
+              f"Transformer '{self.name}': transformer_kwargs contains parameters "
+              f"not defined in function: {invalid_kwargs}. "
+              f"Function parameters: {func_params}"
+            )
+      
+      print(f"Transformer '{self.name}' initialized successfully")
+      print(f"  - Function: {transformer_function.__name__}")
+      print(f"  - Function parameters: {params}")
+      if self.transformer_kwargs:
+        print(f"  - Provided kwargs: {list(self.transformer_kwargs.keys())}")
+        print(f"  - Kwargs values: {self.transformer_kwargs}")
+      else:
+        print(f"  - No additional kwargs provided")
+        
+    except Exception as e:
+      print(f"Warning: Could not validate function signature: {str(e)}")
   
   def add_input_pipe(self, pipe: Pipe) -> None:
-    # Solo permite 1 entrada
+    """
+    Add input pipe (only 1 allowed)
+    
+    Parameters
+    ----------
+    pipe : Pipe
+      Input pipe to connect
+    """
     if len(self.inputs.keys()) == 0:
       self.inputs[pipe.get_name()] = pipe
     else:
       raise ValueError(f"Transformer '{self.name}' can only have 1 input")
   
   def add_output_pipe(self, pipe: Pipe) -> Pipe:
-    # Solo permite 1 salida
+    """
+    Add output pipe (only 1 allowed)
+    
+    Parameters
+    ----------
+    pipe : Pipe
+      Output pipe to connect
+      
+    Returns
+    -------
+    Pipe
+      The connected pipe (enables method chaining)
+    """
     if len(self.outputs.keys()) == 0:
       self.outputs[pipe.get_name()] = pipe
       pipe.set_origin(self)
@@ -777,6 +982,14 @@ class Transformer(Node):
       raise ValueError(f"Transformer '{self.name}' can only have 1 output")
   
   def sink(self, data_package: DataPackage) -> None:
+    """
+    Receive data from input pipe
+    
+    Parameters
+    ----------
+    data_package : DataPackage
+      Data package containing DataFrame and metadata
+    """
     print(f"Transformer '{self.name}' received data from pipe: '{data_package.get_pipe_name()}'")
     df = data_package.get_df()
     
@@ -788,6 +1001,9 @@ class Transformer(Node):
     self.pump()
   
   def pump(self) -> None:
+    """
+    Apply transformation function to DataFrame and pump to output
+    """
     if self.received_df is None:
       print(f"Warning: Transformer '{self.name}' has no data to process")
       return
@@ -797,41 +1013,123 @@ class Transformer(Node):
       return
     
     df = self.received_df
-    print(f"Transformer '{self.name}' processing DataFrame with {len(df)} rows")
-    print(f"Transformer '{self.name}' original columns: {list(df.columns)}")
+    print(f"\n{'='*70}")
+    print(f"Transformer '{self.name}' processing DataFrame...")
+    print(f"{'='*70}")
+    print(f"  - Input rows: {len(df)}")
+    print(f"  - Input columns: {len(df.columns)}")
+    print(f"  - Input column names: {list(df.columns)}")
+    print(f"  - Function: {self.transformer_function.__name__}")
+    
+    if self.transformer_kwargs:
+      print(f"  - Applying with kwargs:")
+      for key, value in self.transformer_kwargs.items():
+        # Truncar valores muy largos para el log
+        value_str = str(value)
+        if len(value_str) > 50:
+          value_str = value_str[:47] + "..."
+        print(f"    • {key}: {value_str}")
+    else:
+      print(f"  - No additional kwargs")
     
     try:
       # Aplicar la función de transformación
-      transformed_df = self.transformer_function(df)
+      print(f"\nTransformer '{self.name}' executing transformation function...")
       
-      # Validar que la función retorne un DataFrame
-      if not isinstance(transformed_df, pd.DataFrame):
-        raise ValueError(f"Transformer '{self.name}': transformer_function must return a pandas DataFrame, got {type(transformed_df)}")
+      # Llamar la función con el DataFrame y los kwargs
+      result_df = self.transformer_function(df, **self.transformer_kwargs)
       
-      print(f"Transformer '{self.name}' completed transformation:")
-      print(f"  - Input rows: {len(df)}")
-      print(f"  - Input columns: {len(df.columns)}")
-      print(f"  - Output rows: {len(transformed_df)}")
-      print(f"  - Output columns: {len(transformed_df.columns)}")
-      print(f"  - Final columns: {list(transformed_df.columns)}")
+      # Validar que el resultado sea un DataFrame
+      if not isinstance(result_df, pd.DataFrame):
+        raise ValueError(
+          f"Transformer '{self.name}': transformer_function must return a pandas DataFrame, "
+          f"got {type(result_df)}"
+        )
+      
+      # Validar que el resultado no esté vacío
+      if result_df.empty:
+        print(f"Warning: Transformer '{self.name}': transformation resulted in empty DataFrame")
+      
+      print(f"\n{'='*70}")
+      print(f"Transformer '{self.name}' transformation completed:")
+      print(f"{'='*70}")
+      print(f"  📊 Results:")
+      print(f"     - Input rows: {len(df)}")
+      print(f"     - Output rows: {len(result_df)}")
+      print(f"     - Rows changed: {len(result_df) - len(df):+d}")
+      print(f"     - Input columns: {len(df.columns)}")
+      print(f"     - Output columns: {len(result_df.columns)}")
+      print(f"     - Columns changed: {len(result_df.columns) - len(df.columns):+d}")
+      
+      # Mostrar columnas añadidas o eliminadas
+      input_cols = set(df.columns)
+      output_cols = set(result_df.columns)
+      
+      added_cols = output_cols - input_cols
+      removed_cols = input_cols - output_cols
+      
+      if added_cols:
+        print(f"     - Columns added: {list(added_cols)}")
+      if removed_cols:
+        print(f"     - Columns removed: {list(removed_cols)}")
+      
+      print(f"  📋 Output column names: {list(result_df.columns)}")
+      
+      print(f"  📋 Output data types:")
+      for col, dtype in result_df.dtypes.items():
+        print(f"     - {col}: {dtype}")
       
       # Enviar el resultado al pipe de salida
       output_pipe = list(self.outputs.values())[0]
-      output_pipe.flow(transformed_df)
-      print(f"Transformer '{self.name}' pumped transformed data through pipe '{output_pipe.get_name()}'")
+      output_pipe.flow(result_df)
+      print(f"\n{'='*70}")
+      print(f"✅ Transformer '{self.name}' pumped transformed data through pipe '{output_pipe.get_name()}'")
+      print(f"{'='*70}")
       
+    except TypeError as e:
+      # Error de tipo - probablemente problema con los kwargs
+      error_msg = str(e)
+      if "unexpected keyword argument" in error_msg or "missing" in error_msg:
+        print(f"\n{'='*70}")
+        print(f"❌ Error: Transformer '{self.name}' function signature mismatch")
+        print(f"{'='*70}")
+        print(f"Function: {self.transformer_function.__name__}")
+        print(f"Provided kwargs: {list(self.transformer_kwargs.keys())}")
+        print(f"Error details: {error_msg}")
+        
+        # Intentar mostrar la firma esperada
+        try:
+          sig = inspect.signature(self.transformer_function)
+          print(f"Expected function signature: {sig}")
+        except:
+          pass
+        
+        raise ValueError(
+          f"Transformer '{self.name}': Function parameter mismatch. "
+          f"Check that transformer_kwargs keys match function parameters. "
+          f"Error: {error_msg}"
+        )
+      else:
+        raise
+    
     except Exception as e:
-      print(f"Error: Transformer '{self.name}' failed to apply transformation: {str(e)}")
-      print(f"Transformer function: {self.transformer_function}")
+      print(f"\n{'='*70}")
+      print(f"❌ Error: Transformer '{self.name}' transformation failed")
+      print(f"{'='*70}")
+      print(f"Function: {self.transformer_function.__name__}")
+      print(f"Error type: {type(e).__name__}")
+      print(f"Error details: {str(e)}")
       print(f"Input DataFrame shape: {df.shape}")
       print(f"Input DataFrame columns: {list(df.columns)}")
-      # En caso de error, podríamos opcionalmente pasar el DataFrame original
-      # o simplemente no enviar nada (comportamiento actual)
+      if self.transformer_kwargs:
+        print(f"Provided kwargs: {self.transformer_kwargs}")
+      print(f"{'='*70}")
+      raise
     
-    # Limpiar después del procesamiento
-    self.received_df = None
-    
-    
+    finally:
+      # Limpiar después del procesamiento
+      self.received_df = None    
+ 
     
 class APIRestOrigin(Origin):
   def __init__(self, name: str, path: str = '.', fields: list = None, **kwargs):
