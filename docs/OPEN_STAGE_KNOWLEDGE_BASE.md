@@ -25,6 +25,7 @@
 - **Advanced BigQuery Support**: before_query, after_query, partitioning, clustering, dry_run
 - **Advanced PostgreSQL Support**: before_query, after_query, timeout, query_parameters ✨
 - **Advanced MySQL Support**: before_query, after_query, timeout, query_parameters ✨ NEW v2.4
+- **Enhanced Transformer**: transformer_kwargs for flexible function arguments (like Airflow's op_kwargs) ✨ **NEW v2.4**
 
 ---
 
@@ -389,6 +390,69 @@ mysql_dest = MySQLDestination(
 
 ---
 
+## Transformers (Data Processors) - 1→1
+
+### Transformer ✨ ENHANCED v2.4
+**Module**: `src/core/common.py`
+**Purpose**: Applies custom transformation functions to DataFrames with support for additional arguments.
+
+**Dependencies**: `pandas`
+
+**Parameters**:
+- `name`: str - Component name
+- `transformer_function`: callable - Function that transforms the DataFrame
+- **`transformer_kwargs`: dict = {}** - ✨ Dictionary of additional keyword arguments to pass to the function
+
+**Function Requirements**:
+- Must accept DataFrame as **first parameter**
+- Must return a pandas DataFrame
+- Can accept additional parameters that match keys in `transformer_kwargs`
+
+**Example**:
+```python
+def multiply_column(df, column, multiplier, add_value):
+  df[f'{column}_new'] = df[column] * multiplier + add_value
+  return df
+
+transformer = Transformer(
+  name="price_calculator",
+  transformer_function=multiply_column,
+  transformer_kwargs={
+    'column': 'price',
+    'multiplier': 1.16,
+    'add_value': 50
+  }
+)
+```
+
+**New Features v2.4**:
+- **transformer_kwargs**: Pass additional arguments to transformation function (similar to Airflow's `op_kwargs`) ✨ **NEW**
+- **Function signature validation**: Validates kwargs match function parameters at initialization ✨ **NEW**
+- **Enhanced logging**: Shows function name, parameters, before/after statistics ✨ **NEW**
+- **Detailed error messages**: Clear messages for parameter mismatches ✨ **NEW**
+
+**Use cases**:
+- Custom data transformations with configurable parameters
+- Feature engineering with dynamic thresholds
+- Data cleaning with reusable functions
+- Complex calculations requiring multiple arguments
+- Chaining multiple transformation steps
+
+**Validations**:
+- transformer_function cannot be None
+- transformer_function must be callable
+- transformer_kwargs must be a dictionary
+- Function must accept at least one parameter (DataFrame)
+- Kwargs keys must match function parameters (unless function accepts **kwargs)
+- Function must return a pandas DataFrame
+
+**Error Handling**:
+- TypeError → Parameter mismatch between kwargs and function signature
+- ValueError → Function didn't return DataFrame or validation failed
+- Shows function name, kwargs, and DataFrame shape in error messages
+
+---
+
 # DESIGN PRINCIPLES
 
 1. **Pipes and Filters Architecture**: Modular, reusable components with clear separation of concerns
@@ -609,6 +673,7 @@ bq_origin.pump()
 - **PostgresDestination enhancements**: before_query, after_query, timeout ✨
 - **MySQLOrigin enhancements**: before_query, after_query, timeout, max_results, query_parameters, table ✨ **NEW v2.4**
 - **MySQLDestination enhancements**: before_query, after_query, timeout ✨ **NEW v2.4**
+- **Transformer enhancements**: transformer_kwargs for flexible function arguments ✨ **NEW v2.4**
 - **29 total components**
 
 ## In Progress (🚧)
@@ -714,8 +779,9 @@ This pattern should be applied to MariaDB and other database connectors.
 **Date**: January 2025  
 **Status**: Production Ready ✅  
 **Latest Updates**: 
-- Enhanced MySQLOrigin with before_query, after_query, timeout, max_results, query_parameters, table ✨ **NEW**
-- Enhanced MySQLDestination with before_query, after_query, timeout ✨ **NEW**
+- Enhanced Transformer with transformer_kwargs for flexible function arguments ✨ **NEW**
+- Enhanced MySQLOrigin with before_query, after_query, timeout, max_results, query_parameters, table ✨
+- Enhanced MySQLDestination with before_query, after_query, timeout ✨
 - Enhanced PostgresOrigin with before_query, after_query, timeout, max_results, query_parameters, table ✨
 - Enhanced PostgresDestination with before_query, after_query, timeout ✨
 - Enhanced logging with structured format and emojis ✨
