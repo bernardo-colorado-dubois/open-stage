@@ -3,9 +3,9 @@ from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Printer
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
-    datefmt="%H:%M:%S",
+  level=logging.INFO,
+  format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+  datefmt="%H:%M:%S",
 )
 
 coffee_sales_csv_origin = CSVOrigin(
