@@ -1,6 +1,6 @@
 import os
-from src.core.common import Printer,Pipe
-from src.google.cloud import GCPBigQueryOrigin
+from open_stage.core.common import Printer,Pipe
+from open_stage.google.bigquery import GCPBigQueryOrigin
 from dotenv import load_dotenv
 
 load_dotenv()

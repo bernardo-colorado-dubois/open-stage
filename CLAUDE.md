@@ -1,109 +1,294 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía de referencia para Claude Code al trabajar en este repositorio.
 
-## Project Overview
+---
 
-Open-Stage is an ETL (Extract, Transform, Load) framework inspired by IBM DataStage, built on a **Pipes and Filters** architecture. Data flows through pipelines composed of Origins → Pipes → Nodes/Destinations.
+## Descripción general
 
-## Setup & Running
+Open-Stage es un framework ETL para Python, inspirado en IBM DataStage. Implementa una arquitectura **Pipes and Filters**: los datos fluyen a través de pipelines compuestos por Origins → Pipes → Nodes → Destinations.
+
+Es un **paquete instalable** (`pip install -e ".[all]"`), diseñado para usarse como dependencia en otros proyectos.
+
+---
+
+## Setup
 
 ```bash
-# Install dependencies (requires Python 3.8+)
-pip install -r requirements.txt
+# Instalar con todas las dependencias opcionales (Python 3.8+)
+pip install -e ".[all]"
 
-# Create .env with credentials (copy from .env.example if present)
-# Run a sample pipeline
-python sample_1_csv_print.py
+# O solo lo necesario
+pip install -e ".[postgres,anthropic]"
 
-# Clean Python cache
+# Ejecutar un pipeline de ejemplo
+venv/bin/python sample_1_csv_print.py
+
+# Limpiar cache de Python
 ./delete_python_cache.sh
 ```
 
-No formal test suite — the `sample_*.py` scripts serve as integration tests/examples. Each sample requires valid `.env` credentials (DB or API keys) and running external services where applicable.
+**Importante:** usar siempre `venv/bin/python` y `venv/bin/pip`. El Python del sistema no tiene las dependencias del proyecto.
 
-## Architecture
+---
 
-### Core Abstractions (`src/core/base.py`)
+## Tests
 
-| Class | Role | Pipes |
-|-------|------|-------|
-| `Origin` | Data source | 0 inputs → 1 output |
-| `Destination` | Data sink | 1 input → 0 outputs |
-| `Node` | Transformer (inherits both) | M inputs → N outputs |
-
-**`DataPackage`**: The unit of data transport. Wraps a pandas `DataFrame` plus metadata (`pipe_name`).
-
-**`Pipe`**: Connects components. Call `.set_destination(component)` to link and `.flow()` to push data.
-
-### Data Flow
-
-```
-Origin.pump() → Pipe → Destination.sink()
-                          └── calls upstream pump() automatically
+```bash
+venv/bin/python -m pytest tests/ -v
 ```
 
-Pipelines are built with **method chaining**:
+El suite cubre todos los componentes core sin depender de servicios externos (sin DB, sin API keys). Los `sample_*.py` sirven como ejemplos de integración end-to-end y sí requieren credenciales reales.
+
+---
+
+## Arquitectura
+
+### Abstracciones base (`open_stage/core/base.py`)
+
+| Clase | Rol | Conectividad |
+|-------|-----|-------------|
+| `Origin` | Fuente de datos | 0 entradas → 1 salida |
+| `Destination` | Destino de datos | 1 entrada → 0 salidas |
+| `Node` | Transformador (hereda de ambos) | M entradas → N salidas |
+| `Pipe` | Conecta componentes, transporta `DataPackage` | — |
+| `DataPackage` | Envuelve un DataFrame + nombre del pipe | — |
+
+### Mixins de cardinalidad (`open_stage/core/base.py`)
+
+Todos los componentes usan mixins para declarar cuántos pipes aceptan. **No implementar `add_input_pipe`/`add_output_pipe` manualmente** — usar los mixins.
+
+| Mixin | Comportamiento |
+|-------|---------------|
+| `SingleInputMixin` | Exactamente 1 entrada; lanza `ValueError` si se agrega una segunda |
+| `SingleOutputMixin` | Exactamente 1 salida; lanza `ValueError` si se agrega una segunda |
+| `MultiOutputMixin` | Salidas ilimitadas |
+
+Ejemplo de declaración de un componente:
 ```python
-origin.add_output_pipe().set_destination(node).add_output_pipe().set_destination(destination)
-destination.sink()  # triggers the entire chain
+class Filter(SingleInputMixin, SingleOutputMixin, Node):
+    ...
 ```
 
-### Component Modules
+### Flujo de datos
 
-- `src/core/base.py` — `DataPackage`, `Pipe`, `Origin`, `Destination`, `Node`
-- `src/core/common.py` — `CSVOrigin`, `Generator`, `APIRestOrigin`, `Printer`, `CSVDestination`, `Filter`, `Aggregator`, `DeleteColumns`, `RemoveDuplicates`, `Joiner`, `Transformer`, `Funnel`, `Switcher`, `Copy`
-- `src/postgres/` — `PostgresOrigin`, `PostgresDestination`
-- `src/mysql/` — `MySQLOrigin`, `MySQLDestination`
-- `src/google/` — `GCPBigQueryOrigin`, `GCPBigQueryDestination`, `GeminiPromptTransformer`
-- `src/anthropic/` — `AnthropicPromptTransformer`
-- `src/open_ai/` — `OpenAIPromptTransformer`
-- `src/deepseek/` — `DeepSeekPromptTransformer`
+```
+origin.pump()
+  → pipe.flow(df)
+    → node.sink(data_package)
+      → node.pump()
+        → pipe.flow(df)
+          → destination.sink(data_package)
+```
 
-### Routers
+El pipeline se dispara siempre llamando `origin.pump()` al final. Nunca `destination.sink()`.
 
-- **`Funnel`** (N→1): Merges multiple input pipes into one output
-- **`Switcher`** (1→N): Routes rows to different outputs based on a condition
-- **`Copy`** (1→N): Duplicates data to multiple outputs
+Construcción con method chaining:
+```python
+origin.add_output_pipe(Pipe("p1")).set_destination(node)
+node.add_output_pipe(Pipe("p2")).set_destination(destination)
+origin.pump()
+```
 
-### AI Transformers
+`add_output_pipe(pipe)` devuelve el `pipe`. `pipe.set_destination(dest)` devuelve `dest` si es un `Node`, `None` si es un `Destination`.
 
-All AI transformers (`AnthropicPromptTransformer`, `OpenAIPromptTransformer`, etc.) convert the incoming DataFrame to CSV, send it to the LLM with a user-defined prompt, and parse the CSV response back into a DataFrame.
+---
 
-### Database Origins — Advanced Features
+## Módulos y componentes
 
-PostgreSQL and MySQL Origins support:
-- `before_query` / `after_query`: SQL executed before/after extraction (temp tables, audit logging)
-- `query_parameters`: Dict of named parameters using `:param_name` syntax (SQLAlchemy-safe)
-- `table`: Read a full table without writing `SELECT *`
-- `max_results`: Limit rows (useful for testing)
-- `timeout`: Connection/query timeout in seconds
+### `open_stage/core/base.py`
+`DataPackage`, `Pipe`, `Origin`, `Destination`, `Node`, `SingleInputMixin`, `SingleOutputMixin`, `MultiOutputMixin`
 
-### Key Design Patterns
+### `open_stage/core/base_ai.py`
+`BasePromptTransformer` — base abstracta para todos los AI Transformers. Implementa el ciclo completo CSV → LLM → CSV. Las subclases solo implementan `_initialize_client()` y `_call_api()`.
 
-- **Lazy initialization**: DB/API clients connect on first use, not at construction
-- **Validation at construction**: Invalid pipe configurations raise errors early (e.g., adding two output pipes to an Origin)
-- **Resource cleanup**: DataFrames are cleared after downstream processing
-- **`**kwargs` forwarding**: Origins/Destinations accept extra kwargs passed to pandas or the underlying driver
+### `open_stage/core/common.py`
+| Componente | Tipo | Conectividad |
+|------------|------|-------------|
+| `CSVOrigin` | Origin | 0 → 1 |
+| `OpenOrigin` | Origin | 0 → 1 |
+| `APIRestOrigin` | Origin | 0 → 1 |
+| `Printer` | Destination | 1 → 0 |
+| `CSVDestination` | Destination | 1 → 0 |
+| `Filter` | Node | 1 → 1 |
+| `Aggregator` | Node | 1 → 1 |
+| `DeleteColumns` | Node | 1 → 1 |
+| `RemoveDuplicates` | Node | 1 → 1 |
+| `Transformer` | Node | 1 → 1 |
+| `Joiner` | Node | 2 → 1 |
+| `Funnel` | Node | N → 1 |
+| `Switcher` | Node | 1 → N |
+| `Copy` | Node | 1 → N |
 
-## Environment Variables (`.env`)
+### `open_stage/postgres/common.py`
+`PostgresOrigin`, `PostgresDestination`
 
-Required keys depending on which components are used:
+### `open_stage/mysql/common.py`
+`MySQLOrigin`, `MySQLDestination`
 
-| Variable | Used by |
-|----------|---------|
-| `POSTGRES_*` | PostgresOrigin/Destination |
-| `MYSQL_*` | MySQLOrigin/Destination |
+### `open_stage/google/bigquery.py`
+`GCPBigQueryOrigin`, `GCPBigQueryDestination`
+
+### `open_stage/google/gemini.py`
+`GeminiPromptTransformer`
+
+### `open_stage/anthropic/claude.py`
+`AnthropicPromptTransformer`
+
+### `open_stage/open_ai/transformer.py`
+`OpenAIPromptTransformer`
+
+### `open_stage/deepseek/transformer.py`
+`DeepSeekPromptTransformer`
+
+---
+
+## AI Transformers
+
+Todas las clases extienden `BasePromptTransformer`. La base maneja el ciclo completo; las subclases solo implementan dos métodos:
+
+```python
+def _initialize_client(self) -> None:
+    # Instanciar self.client con self.api_key
+    ...
+
+def _call_api(self, system_message: str, user_message: str) -> dict:
+    # Llamar al LLM y devolver:
+    return {
+        "response_text": str,   # respuesta del modelo
+        "truncated": bool,      # True si se cortó por límite de tokens
+        "input_tokens": int,
+        "output_tokens": int,
+    }
+```
+
+El cliente se inicializa de forma lazy (primera llamada a `pump()`).
+
+`DeepSeekPromptTransformer` tiene un límite fijo: `max_tokens` no puede superar 8192.
+
+---
+
+## Bases de datos — opciones avanzadas
+
+`PostgresOrigin`, `MySQLOrigin` y `GCPBigQueryOrigin` comparten estas opciones:
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `query` | SQL principal a ejecutar |
+| `table` | Lee una tabla completa sin escribir `SELECT *` |
+| `before_query` | SQL ejecutado antes de la consulta (temp tables, auditoría) |
+| `after_query` | SQL ejecutado después de la consulta (limpieza, logs) |
+| `query_parameters` | Dict con parámetros nombrados: sintaxis `:nombre` (SQLAlchemy-safe) |
+| `max_results` | Limita las filas devueltas (útil en pruebas) |
+| `timeout` | Tiempo máximo de ejecución en segundos |
+
+`PostgresDestination` y `MySQLDestination` soportan `before_query`, `after_query` y `timeout`.
+
+`GCPBigQueryDestination` soporta además `time_partitioning`, `clustering_fields`, `write_disposition` y `schema_update_options`.
+
+---
+
+## Patrones de diseño
+
+- **Lazy initialization**: los clientes de DB y API se conectan en el primer uso, no al construir
+- **Validación en construcción**: configuraciones inválidas lanzan `ValueError` inmediatamente
+- **Los errores siempre propagan**: todos los bloques `except` hacen `raise` después de loggear — los pipelines nunca fallan silenciosamente
+- **Limpieza de recursos**: los DataFrames se limpian en bloques `finally` tras el procesamiento
+- **`**kwargs` forwarding**: `CSVOrigin` y `CSVDestination` pasan kwargs adicionales a pandas
+
+---
+
+## Logging
+
+Todos los módulos usan `logging.getLogger(__name__)`. **No hay `print()` en el código del framework** (excepto `Printer.sink()`, que es salida intencional).
+
+```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)   # producción
+logging.basicConfig(level=logging.INFO)      # desarrollo
+logging.basicConfig(level=logging.DEBUG)     # depuración
+
+# Control por módulo
+logging.getLogger("open_stage.google.bigquery").setLevel(logging.WARNING)
+logging.getLogger("open_stage.core").setLevel(logging.DEBUG)
+```
+
+---
+
+## Packaging (`pyproject.toml`)
+
+```
+[project.optional-dependencies]
+postgres  = ["sqlalchemy>=1.4", "psycopg2-binary>=2.9"]
+mysql     = ["sqlalchemy>=1.4", "pymysql>=1.0"]
+bigquery  = ["google-cloud-bigquery>=3.0", "db-dtypes>=1.0", "google-auth>=2.0"]
+anthropic = ["anthropic>=0.20"]
+openai    = ["openai>=1.0"]
+deepseek  = ["openai>=1.0"]
+gemini    = ["google-genai>=1.0", "google-generativeai>=0.4"]
+all       = [todos los anteriores]
+```
+
+---
+
+## Variables de entorno (`.env`)
+
+| Variable | Usada por |
+|----------|-----------|
+| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | PostgresOrigin/Destination |
+| `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`, `MYSQL_USER`, `MYSQL_PASSWORD` | MySQLOrigin/Destination |
 | `GCP_PROJECT`, `GOOGLE_APPLICATION_CREDENTIALS` | BigQuery, Gemini |
 | `ANTHROPIC_API_KEY` | AnthropicPromptTransformer |
 | `OPENAI_API_KEY` | OpenAIPromptTransformer |
 | `DEEPSEEK_API_KEY` | DeepSeekPromptTransformer |
 
-## Documentation
+---
 
-Detailed component guides live in `docs/`:
-- `docs/StartHere.md` — quick start
-- `docs/OPEN_STAGE_KNOWLEDGE_BASE.md` — complete reference
-- `docs/ClaudeQuickReference.md` — AI transformer usage
-- `docs/complex_pipelines.md` — advanced pipeline patterns
-- `docs/Transformer.md` — custom transformation functions
+## Convenciones de código
+
+- Indentación: 2 espacios (estilo original del proyecto)
+- Sin emojis en logs ni en código del framework
+- Sin comentarios que expliquen el "qué" — solo el "por qué" si es no obvio
+- Sin manejo de errores para escenarios imposibles — los errores deben propagarse
+- Imports en archivos de ejemplo/sample: `from open_stage.X.Y import Z` (nunca `from src.`)
+
+---
+
+## Estructura de archivos
+
+```
+open_stage/
+├── core/
+│   ├── base.py
+│   ├── base_ai.py
+│   └── common.py
+├── postgres/
+│   └── common.py
+├── mysql/
+│   └── common.py
+├── google/
+│   ├── bigquery.py
+│   └── gemini.py
+├── anthropic/
+│   └── claude.py
+├── open_ai/
+│   └── transformer.py
+└── deepseek/
+    └── transformer.py
+
+tests/
+├── conftest.py       # CaptureDest helper, fixture sample_df
+├── test_base.py      # Tests de DataPackage, Pipe y Mixins
+└── test_common.py    # Tests de todos los componentes core
+
+sample_*.py           # Ejemplos de integración (requieren credenciales reales)
+pyproject.toml
+requirements.txt
+```
+
+---
+
+## Documentación
+
+Los archivos en `docs/` son anteriores a la refactorización actual y están desactualizados. La fuente de verdad es este archivo y el `README.md`.

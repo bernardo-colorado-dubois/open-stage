@@ -1,5 +1,5 @@
-from src.core.base import Pipe
-from src.core.common import CSVOrigin,CSVDestination, Printer, Filter, DeleteColumns, Switcher,Aggregator
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin,CSVDestination, Printer, Filter, DeleteColumns, Switcher,Aggregator
 
 coffee_sales_csv_origin = CSVOrigin(
   name='coffee_sales_csv_origin',

@@ -1,6 +1,6 @@
-from src.core.base import Pipe
-from src.core.common import CSVOrigin, Printer
-from src.deepseek.deepseek import DeepSeekPromptTransformer
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin, Printer
+from open_stage.deepseek.transformer import DeepSeekPromptTransformer
 from dotenv import load_dotenv
 import os
 

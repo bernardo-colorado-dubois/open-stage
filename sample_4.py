@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
 import os
 
-from src.core.base import Pipe
-from src.core.common import CSVOrigin
-from src.google.cloud import GCPBigQueryDestination
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin
+from open_stage.google.bigquery import GCPBigQueryDestination
 
 load_dotenv()
 

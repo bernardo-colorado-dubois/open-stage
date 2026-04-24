@@ -1,6 +1,6 @@
-from src.mysql.common import MySQLOrigin, MySQLDestination
-from src.core.common import Filter
-from src.core.base import Pipe
+from open_stage.mysql.common import MySQLOrigin, MySQLDestination
+from open_stage.core.common import Filter
+from open_stage.core.base import Pipe
 from dotenv import load_dotenv
 import os
 

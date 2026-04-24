@@ -2,10 +2,10 @@ import os
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
-from src.core.base import Pipe
-from src.core.common import  Printer,DeleteColumns
-from src.postgres.common import PostgresOrigin
-from src.mysql.common import MySQLOrigin
+from open_stage.core.base import Pipe
+from open_stage.core.common import  Printer,DeleteColumns
+from open_stage.postgres.common import PostgresOrigin
+from open_stage.mysql.common import MySQLOrigin
 
 load_dotenv()
 

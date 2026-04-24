@@ -1,4 +1,4 @@
-from src.core.common import Pipe, CSVOrigin, Printer, Filter
+from open_stage.core.common import Pipe, CSVOrigin, Printer, Filter
 
 
 csv_iris = CSVOrigin(

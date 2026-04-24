@@ -1,7 +1,7 @@
 import os
-from src.core.common import Printer,Pipe
-from src.google.cloud import GCPBigQueryOrigin
-from src.anthropic.claude import AnthropicPromptTransformer
+from open_stage.core.common import Printer,Pipe
+from open_stage.google.bigquery import GCPBigQueryOrigin
+from open_stage.anthropic.claude import AnthropicPromptTransformer
 from dotenv import load_dotenv
 
 load_dotenv()

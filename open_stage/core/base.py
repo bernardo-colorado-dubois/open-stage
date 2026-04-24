@@ -75,3 +75,31 @@ class Node(Origin, Destination):
   def __init__(self):
     Origin.__init__(self)
     Destination.__init__(self)
+
+
+class SingleInputMixin:
+  """Restricts a component to exactly 1 input pipe."""
+  def add_input_pipe(self, pipe: 'Pipe') -> None:
+    if len(self.inputs) == 0:
+      self.inputs[pipe.get_name()] = pipe
+    else:
+      raise ValueError(f"{self.__class__.__name__} '{self.name}' can only have 1 input")
+
+
+class SingleOutputMixin:
+  """Restricts a component to exactly 1 output pipe."""
+  def add_output_pipe(self, pipe: 'Pipe') -> 'Pipe':
+    if len(self.outputs) == 0:
+      self.outputs[pipe.get_name()] = pipe
+      pipe.set_origin(self)
+      return pipe
+    else:
+      raise ValueError(f"{self.__class__.__name__} '{self.name}' can only have 1 output")
+
+
+class MultiOutputMixin:
+  """Allows a component to have unlimited output pipes."""
+  def add_output_pipe(self, pipe: 'Pipe') -> 'Pipe':
+    self.outputs[pipe.get_name()] = pipe
+    pipe.set_origin(self)
+    return pipe

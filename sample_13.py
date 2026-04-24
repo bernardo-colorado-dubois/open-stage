@@ -1,5 +1,5 @@
-from src.open_ai.chat_gpt import OpenAIPromptTransformer
-from src.core.common import OpenOrigin, Printer, Pipe, Switcher
+from open_stage.open_ai.transformer import OpenAIPromptTransformer
+from open_stage.core.common import OpenOrigin, Printer, Pipe, Switcher
 import pandas as pd
 import os
 from dotenv import load_dotenv

@@ -1,6 +1,6 @@
-from src.postgres.common import PostgresOrigin, PostgresDestination
-from src.core.common import Filter, Aggregator
-from src.core.base import Pipe
+from open_stage.postgres.common import PostgresOrigin, PostgresDestination
+from open_stage.core.common import Filter, Aggregator
+from open_stage.core.base import Pipe
 
 # Leer de PostgreSQL
 pg_origin = PostgresOrigin(

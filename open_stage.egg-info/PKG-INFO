@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: open-stage
+Version: 0.1.0
+Summary: ETL framework inspired by IBM DataStage, built on a Pipes and Filters architecture.
+Requires-Python: >=3.8
+License-File: LICENCE
+Requires-Dist: pandas>=1.3
+Requires-Dist: requests>=2.26
+Requires-Dist: python-dotenv>=0.19
+Provides-Extra: postgres
+Requires-Dist: sqlalchemy>=1.4; extra == "postgres"
+Requires-Dist: psycopg2-binary>=2.9; extra == "postgres"
+Provides-Extra: mysql
+Requires-Dist: sqlalchemy>=1.4; extra == "mysql"
+Requires-Dist: pymysql>=1.0; extra == "mysql"
+Provides-Extra: bigquery
+Requires-Dist: google-cloud-bigquery>=3.0; extra == "bigquery"
+Requires-Dist: db-dtypes>=1.0; extra == "bigquery"
+Requires-Dist: google-auth>=2.0; extra == "bigquery"
+Provides-Extra: anthropic
+Requires-Dist: anthropic>=0.20; extra == "anthropic"
+Provides-Extra: openai
+Requires-Dist: openai>=1.0; extra == "openai"
+Provides-Extra: deepseek
+Requires-Dist: openai>=1.0; extra == "deepseek"
+Provides-Extra: gemini
+Requires-Dist: google-genai>=1.0; extra == "gemini"
+Requires-Dist: google-generativeai>=0.4; extra == "gemini"
+Provides-Extra: all
+Requires-Dist: open-stage[anthropic,bigquery,deepseek,gemini,mysql,openai,postgres]; extra == "all"
+Dynamic: license-file
