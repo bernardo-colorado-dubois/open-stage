@@ -29,8 +29,6 @@ csv_iris = CSVOrigin(
   }
 )
 
-iris_pipe = Pipe(name='iris_pipe')
-
 deepseek_prompt = """
   "1) Provide only the virginica  species
    2) show the species in lower case
@@ -45,12 +43,10 @@ deepseek_transformer = DeepSeekPromptTransformer(
   model="deepseek-chat"
 )
 
-iris_output_pipe = Pipe(name='iris_output_pipe')
-
 iris_printer = Printer(name='iris_printer')
 
-csv_iris.add_output_pipe(iris_pipe).set_destination(deepseek_transformer)
+csv_iris.add_output_pipe(Pipe(name='iris_pipe')).set_destination(deepseek_transformer)
 
-deepseek_transformer.add_output_pipe(iris_output_pipe).set_destination(iris_printer)
+deepseek_transformer.add_output_pipe(Pipe(name='iris_output_pipe')).set_destination(iris_printer)
 
 csv_iris.pump()
