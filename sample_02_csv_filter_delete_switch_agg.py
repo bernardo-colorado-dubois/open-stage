@@ -75,14 +75,13 @@ coffee_sales_afternoon_agg = Aggregator(
   field_to_agg='money'
 )
 
-coffee_sales_morning_count_pipe = Pipe(name='coffee_sales_morning_count_pipe')
-coffee_sales_afternoon_mean_pipe = Pipe(name='coffee_sales_afternoon_mean_pipe')
 
 coffee_sales_morning_agg_csv_destination = CSVDestination(
   name='coffee_sales_morning_agg_csv_destination',
   path_or_buf='./csv/coffee_sales_morning_agg.csv',
   index=False
 )
+
 
 coffee_sales_afternoon_agg_csv_destination = CSVDestination(
   name='coffee_sales_morning_agg_csv_destination',
@@ -100,8 +99,8 @@ coffee_sales_switcher.add_output_pipe(Pipe(name='coffe_sales_pipe_morning')).set
 
 coffee_sales_switcher.add_output_pipe(Pipe(name='coffe_sales_pipe_afternoon')).set_destination(coffee_sales_afternoon_agg)
 
-coffee_sales_morning_agg.add_output_pipe(coffee_sales_morning_count_pipe).set_destination(coffee_sales_morning_agg_csv_destination)
+coffee_sales_morning_agg.add_output_pipe(Pipe(name='coffee_sales_morning_count_pipe')).set_destination(coffee_sales_morning_agg_csv_destination)
 
-coffee_sales_afternoon_agg.add_output_pipe(coffee_sales_afternoon_mean_pipe).set_destination(coffee_sales_afternoon_agg_csv_destination)
+coffee_sales_afternoon_agg.add_output_pipe(Pipe(name='coffee_sales_afternoon_mean_pipe')).set_destination(coffee_sales_afternoon_agg_csv_destination)
 
 coffee_sales_csv_origin.pump()
