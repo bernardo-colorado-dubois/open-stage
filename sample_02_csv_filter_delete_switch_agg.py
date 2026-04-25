@@ -46,7 +46,6 @@ coffee_sales_delete_columns = DeleteColumns(
   columns=['cash_type','hour_of_day']
 )
 
-coffee_sales_pipe_3 = Pipe(name='coffee_sales_pipe_3')
 
 coffee_sales_switcher = Switcher(
   name='coffee_sales_switcher',
@@ -57,7 +56,6 @@ coffee_sales_switcher = Switcher(
   }
 )
 
-coffe_sales_pipe_morning = Pipe(name='coffe_sales_pipe_morning')
 coffe_sales_pipe_afternoon = Pipe(name='coffe_sales_pipe_afternoon')
 
 coffee_sales_morning_agg = Aggregator(
@@ -97,7 +95,7 @@ coffee_sales_filter.add_output_pipe(Pipe(name='coffee_sales_pipe_2')).set_destin
 
 coffee_sales_delete_columns.add_output_pipe(Pipe(name='coffee_sales_pipe_3')).set_destination(coffee_sales_switcher)
 
-coffee_sales_switcher.add_output_pipe(coffe_sales_pipe_morning).set_destination(coffee_sales_morning_agg)
+coffee_sales_switcher.add_output_pipe(Pipe(name='coffe_sales_pipe_morning')).set_destination(coffee_sales_morning_agg)
 
 coffee_sales_switcher.add_output_pipe(coffe_sales_pipe_afternoon).set_destination(coffee_sales_afternoon_agg)
 
