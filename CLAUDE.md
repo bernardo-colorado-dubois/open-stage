@@ -283,6 +283,9 @@ tests/
 └── test_common.py    # Tests de todos los componentes core
 
 sample_*.py           # Ejemplos de integración (requieren credenciales reales)
+                      # Cada archivo arranca con un comentario horizontal que dibuja el grafo del pipeline:
+                      #   [Nodo] --pipe--> [Nodo] --pipe--> [Nodo]
+                      # Las bifurcaciones (Switcher, Copy) se representan con \ y | alineados bajo el nodo que divide.
 pyproject.toml
 requirements.txt
 ```

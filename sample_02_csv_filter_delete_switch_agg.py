@@ -1,3 +1,7 @@
+# Pipeline:
+# [CSVOrigin: coffee_sales] --pipe_1--> [Filter: time_of_day IN(Afternoon,Morning)] --pipe_2--> [DeleteColumns: -cash_type,-hour_of_day] --pipe_3--> [Switcher: time_of_day] --coffe_sales_pipe_morning--> [Aggregator: morning, count/day_of_week] --morning_count_pipe--> [CSVDest: morning_agg.csv]
+#                                                                                                                                                                             \--coffe_sales_pipe_afternoon-> [Aggregator: afternoon, mean(money)/day_of_week] --afternoon_mean_pipe-> [CSVDest: afternoon_agg.csv]
+
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin,CSVDestination, Printer, Filter, DeleteColumns, Switcher,Aggregator
 

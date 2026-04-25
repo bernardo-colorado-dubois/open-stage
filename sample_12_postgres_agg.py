@@ -1,3 +1,6 @@
+# Pipeline:
+# [PostgresOrigin: sales WHERE date >= '2024-01-01'] --extract--> [Aggregator: sum(amount)/category -> total_sales] --load--> [PostgresDest: analytics.sales_summary (replace)]
+
 from open_stage.postgres.common import PostgresOrigin, PostgresDestination
 from open_stage.core.common import Filter, Aggregator
 from open_stage.core.base import Pipe

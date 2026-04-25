@@ -1,3 +1,6 @@
+# Pipeline:
+# [GCPBigQueryOrigin: SAMPLES.IRIS] --bigquery_pipe--> [Printer: bigquery_printer]
+
 import os
 from open_stage.core.common import Printer,Pipe
 from open_stage.google.bigquery import GCPBigQueryOrigin

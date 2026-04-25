@@ -1,3 +1,7 @@
+# Pipelines (independientes):
+# [PostgresOrigin: public.productos] --productos-----------> [DeleteColumns: -10 cols] --prouctos_reducidos--> [Printer: productos_printer]
+# [MySQLOrigin: categorias]          --categorias----------> [DeleteColumns: -4 cols]  --categorias_reducidas-> [Printer: categorias_printer]
+
 import os
 from dotenv import load_dotenv
 from urllib.parse import quote_plus

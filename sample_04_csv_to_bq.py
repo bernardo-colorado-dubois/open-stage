@@ -1,3 +1,6 @@
+# Pipeline:
+# [CSVOrigin: csv_iris] --iris_pipe--> [GCPBigQueryDest: SAMPLES.IRIS (WRITE_TRUNCATE)]
+
 from dotenv import load_dotenv
 import os
 

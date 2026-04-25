@@ -1,3 +1,6 @@
+# Pipeline:
+# [CSVOrigin: csv_iris] --iris_pipe--> [DeepSeekPromptTransformer: deepseek-chat] --iris_output_pipe--> [Printer: iris_printer]
+
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Printer
 from open_stage.deepseek.transformer import DeepSeekPromptTransformer

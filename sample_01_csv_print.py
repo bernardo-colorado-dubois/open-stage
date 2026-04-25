@@ -1,3 +1,6 @@
+# Pipeline:
+# [CSVOrigin: coffee_sales_csv_origin] --coffee_sales_pipe--> [Printer: coffee_sales_printer]
+
 import logging
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Printer

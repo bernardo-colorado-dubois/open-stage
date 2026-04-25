@@ -1,3 +1,6 @@
+# Pipeline:
+# [CSVOrigin: csv_iris] --iris_pipe--> [Filter: petal_length BETWEEN 1.0 AND 4.0] --iris_pipe_filtered--> [Printer: iris_printer]
+
 from open_stage.core.common import Pipe, CSVOrigin, Printer, Filter
 
 

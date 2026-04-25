@@ -1,3 +1,6 @@
+# Pipeline:
+# [MySQLOrigin: dulceria.productos] --extract--> [Filter: stock_actual > 50] --load--> [MySQLDest: productos_filtrados (replace)]
+
 from open_stage.mysql.common import MySQLOrigin, MySQLDestination
 from open_stage.core.common import Filter
 from open_stage.core.base import Pipe

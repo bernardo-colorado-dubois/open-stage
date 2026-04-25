@@ -1,3 +1,6 @@
+# Pipeline:
+# [GCPBigQueryOrigin: SAMPLES.IRIS] --bigquery_pipe--> [AnthropicPromptTransformer: claude-sonnet-4-5] --anthropic_pipe--> [Printer: anthropic_printer]
+
 import os
 from open_stage.core.common import Printer,Pipe
 from open_stage.google.bigquery import GCPBigQueryOrigin

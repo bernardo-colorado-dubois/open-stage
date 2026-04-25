@@ -1,3 +1,8 @@
+# Pipeline:
+# [OpenOrigin: test_data (6 reviews)] --origin_pipe--> [OpenAIPromptTransformer: gpt-3.5-turbo] --transformed_data--> [Switcher: sentiment] --positive_pipe--> [Printer: Positive Reviews]
+#                                                                                                                                             |--negative_pipe--> [Printer: Negative Reviews]
+#                                                                                                                                             \--neutral_pipe-->  [Printer: Neutral Reviews]
+
 from open_stage.open_ai.transformer import OpenAIPromptTransformer
 from open_stage.core.common import OpenOrigin, Printer, Pipe, Switcher
 import pandas as pd
