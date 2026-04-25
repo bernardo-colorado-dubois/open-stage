@@ -13,8 +13,6 @@ open_stage/core/__init__.py
 open_stage/core/base.py
 open_stage/core/base_ai.py
 open_stage/core/common.py
-open_stage/core/destinations.py
-open_stage/core/origins.py
 open_stage/deepseek/__init__.py
 open_stage/deepseek/deepseek.py
 open_stage/deepseek/transformer.py
@@ -24,7 +22,8 @@ open_stage/google/cloud.py
 open_stage/google/gemini.py
 open_stage/mysql/__init__.py
 open_stage/mysql/common.py
-open_stage/open_ai/__init__.py
 open_stage/open_ai/chat_gpt.py
 open_stage/open_ai/transformer.py
 open_stage/postgres/common.py
+tests/test_base.py
+tests/test_common.py

@@ -17,6 +17,7 @@ pymysql>=1.0
 google-cloud-bigquery>=3.0
 db-dtypes>=1.0
 google-auth>=2.0
+pandas-gbq>=0.26.1
 
 # AI — Anthropic
 anthropic>=0.20
@@ -27,3 +28,7 @@ openai>=1.0
 # AI — Gemini
 google-genai>=1.0
 google-generativeai>=0.4
+
+# Packaging
+build>=1.0
+twine>=5.0

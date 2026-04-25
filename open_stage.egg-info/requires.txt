@@ -12,6 +12,7 @@ anthropic>=0.20
 google-cloud-bigquery>=3.0
 db-dtypes>=1.0
 google-auth>=2.0
+pandas-gbq>=0.26.1
 
 [deepseek]
 openai>=1.0

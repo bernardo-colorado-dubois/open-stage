@@ -6,6 +6,25 @@ build-backend = "setuptools.build_meta"
 name = "open-stage"
 version = "0.1.0"
 description = "ETL framework inspired by IBM DataStage, built on a Pipes and Filters architecture."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+  {name = "Bernardo Colorado Dubois", email = "bernardocoloradodubois.fsd@gmail.com"},
+]
+keywords = ["etl", "pipeline", "dataops", "datastage", "pipes-and-filters"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Database",
+]
 requires-python = ">=3.8"
 
 dependencies = [
