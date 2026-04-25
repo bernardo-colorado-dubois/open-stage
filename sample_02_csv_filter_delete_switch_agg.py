@@ -34,8 +34,6 @@ coffee_sales_csv_origin = CSVOrigin(
   header=None,
 )
 
-coffee_sales_pipe_1 = Pipe(name='coffee_sales_pipe_1')
-
 coffee_sales_filter = Filter(
   name='coffee_sales_filter',
   field="time_of_day",
@@ -95,7 +93,7 @@ coffee_sales_afternoon_agg_csv_destination = CSVDestination(
   index=False
 )
 
-coffee_sales_csv_origin.add_output_pipe(coffee_sales_pipe_1).set_destination(coffee_sales_filter)
+coffee_sales_csv_origin.add_output_pipe(Pipe(name='coffee_sales_pipe_1')).set_destination(coffee_sales_filter)
 
 coffee_sales_filter.add_output_pipe(coffee_sales_pipe_2).set_destination(coffee_sales_delete_columns)
 
