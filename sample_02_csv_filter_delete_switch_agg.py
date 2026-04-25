@@ -34,12 +34,14 @@ coffee_sales_csv_origin = CSVOrigin(
   header=None,
 )
 
+
 coffee_sales_filter = Filter(
   name='coffee_sales_filter',
   field="time_of_day",
   condition="in",
   value_or_values=["Afternoon", "Morning"]
 )
+
 
 coffee_sales_delete_columns = DeleteColumns(
   name='coffee_sales_delete_columns',
@@ -56,7 +58,6 @@ coffee_sales_switcher = Switcher(
   }
 )
 
-coffe_sales_pipe_afternoon = Pipe(name='coffe_sales_pipe_afternoon')
 
 coffee_sales_morning_agg = Aggregator(
   name='coffee_sales_morning_agg',
@@ -97,7 +98,7 @@ coffee_sales_delete_columns.add_output_pipe(Pipe(name='coffee_sales_pipe_3')).se
 
 coffee_sales_switcher.add_output_pipe(Pipe(name='coffe_sales_pipe_morning')).set_destination(coffee_sales_morning_agg)
 
-coffee_sales_switcher.add_output_pipe(coffe_sales_pipe_afternoon).set_destination(coffee_sales_afternoon_agg)
+coffee_sales_switcher.add_output_pipe(Pipe(name='coffe_sales_pipe_afternoon')).set_destination(coffee_sales_afternoon_agg)
 
 coffee_sales_morning_agg.add_output_pipe(coffee_sales_morning_count_pipe).set_destination(coffee_sales_morning_agg_csv_destination)
 
