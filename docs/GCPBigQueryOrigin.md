@@ -27,9 +27,9 @@ pip install google-cloud-bigquery google-auth db-dtypes
 
 ### Example 1: Simple Query
 ```python
-from src.google.cloud import GCPBigQueryOrigin
-from src.core.base import Pipe
-from src.core.common import Printer
+from open_stage.google.bigquery import GCPBigQueryOrigin
+from open_stage.core.base import Pipe
+from open_stage.core.common import Printer
 
 # Create origin with query
 origin = GCPBigQueryOrigin(

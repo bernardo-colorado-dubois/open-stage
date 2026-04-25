@@ -291,4 +291,9 @@ requirements.txt
 
 ## Documentación
 
-Los archivos en `docs/` son anteriores a la refactorización actual y están desactualizados. La fuente de verdad es este archivo y el `README.md`.
+Cada componente tiene su propio archivo en `docs/` con ejemplos de uso, tabla de parámetros y consideraciones. El `README.md` enlaza a todos ellos desde las tablas de componentes.
+
+Convenciones de los docs:
+- Imports siempre con `from open_stage.X.Y import Z` (nunca `from src.`)
+- Sin emojis en ejemplos de output — el logger no los produce
+- Estructura: descripción breve → conectividad → ejemplos básicos → ejemplos avanzados → tabla de parámetros → consideraciones → See Also

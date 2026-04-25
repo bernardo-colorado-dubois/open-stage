@@ -26,9 +26,9 @@ pip install sqlalchemy psycopg2-binary pandas
 
 ### Example 1: Simple Query
 ```python
-from src.postgres.common import PostgresOrigin
-from src.core.base import Pipe
-from src.core.common import Printer
+from open_stage.postgres.common import PostgresOrigin
+from open_stage.core.base import Pipe
+from open_stage.core.common import Printer
 
 # Create origin with query
 origin = PostgresOrigin(

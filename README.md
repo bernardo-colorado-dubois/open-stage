@@ -91,41 +91,41 @@ graph LR
 
 | Componente | Qué hace | Import |
 |------------|----------|--------|
-| `CSVOrigin` | Lee un CSV (`pandas.read_csv`) | `open_stage.core.common` |
-| `OpenOrigin` | Envuelve un DataFrame existente | `open_stage.core.common` |
-| `APIRestOrigin` | Consume un endpoint REST | `open_stage.core.common` |
-| `PostgresOrigin` | Consulta PostgreSQL | `open_stage.postgres.common` |
-| `MySQLOrigin` | Consulta MySQL | `open_stage.mysql.common` |
-| `GCPBigQueryOrigin` | Consulta BigQuery | `open_stage.google.bigquery` |
+| [`CSVOrigin`](docs/CSVOrigin.md) | Lee un CSV (`pandas.read_csv`) | `open_stage.core.common` |
+| [`OpenOrigin`](docs/OpenOrigin.md) | Envuelve un DataFrame existente | `open_stage.core.common` |
+| [`APIRestOrigin`](docs/APIRestOrigin.md) | Consume un endpoint REST | `open_stage.core.common` |
+| [`PostgresOrigin`](docs/PostgresOrigin.md) | Consulta PostgreSQL | `open_stage.postgres.common` |
+| [`MySQLOrigin`](docs/MySQLOrigin.md) | Consulta MySQL | `open_stage.mysql.common` |
+| [`GCPBigQueryOrigin`](docs/GCPBigQueryOrigin.md) | Consulta BigQuery | `open_stage.google.bigquery` |
 
 ### Destinations — escriben datos
 
 | Componente | Qué hace | Import |
 |------------|----------|--------|
-| `Printer` | Imprime el DataFrame en consola | `open_stage.core.common` |
-| `CSVDestination` | Escribe un CSV (`pandas.to_csv`) | `open_stage.core.common` |
-| `PostgresDestination` | Carga datos en PostgreSQL | `open_stage.postgres.common` |
-| `MySQLDestination` | Carga datos en MySQL | `open_stage.mysql.common` |
-| `GCPBigQueryDestination` | Carga datos en BigQuery | `open_stage.google.bigquery` |
+| [`Printer`](docs/Printer.md) | Imprime el DataFrame en consola | `open_stage.core.common` |
+| [`CSVDestination`](docs/CSVDestination.md) | Escribe un CSV (`pandas.to_csv`) | `open_stage.core.common` |
+| [`PostgresDestination`](docs/PostgresDestination.md) | Carga datos en PostgreSQL | `open_stage.postgres.common` |
+| [`MySQLDestination`](docs/MySQLDestination.md) | Carga datos en MySQL | `open_stage.mysql.common` |
+| [`GCPBigQueryDestination`](docs/GCPBigQueryDestination.md) | Carga datos en BigQuery | `open_stage.google.bigquery` |
 
 ### Transformers — 1 entrada, 1 salida
 
 | Componente | Qué hace |
 |------------|----------|
-| `Filter` | Filtra filas por condición (`<`, `>`, `<=`, `>=`, `!=`, `=`, `in`, `not in`, `between`) |
-| `Aggregator` | Agrupa por clave y agrega (`sum`, `count`, `mean`, `min`, `max`, …) |
-| `DeleteColumns` | Elimina columnas |
-| `RemoveDuplicates` | Desduplicación por clave, con sort y criterio de retención |
-| `Joiner` | Une dos DataFrames por clave (`inner`, `left`, `right`) |
-| `Transformer` | Aplica una función Python personalizada |
+| [`Filter`](docs/Filter.md) | Filtra filas por condición (`<`, `>`, `<=`, `>=`, `!=`, `=`, `in`, `not in`, `between`) |
+| [`Aggregator`](docs/Aggregator.md) | Agrupa por clave y agrega (`sum`, `count`, `mean`, `min`, `max`, …) |
+| [`DeleteColumns`](docs/DeleteColumns.md) | Elimina columnas |
+| [`RemoveDuplicates`](docs/RemoveDuplicates.md) | Desduplicación por clave, con sort y criterio de retención |
+| [`Joiner`](docs/Joiner.md) | Une dos DataFrames por clave (`inner`, `left`, `right`) |
+| [`Transformer`](docs/Transformer.md) | Aplica una función Python personalizada |
 
 ### Routers — distribuyen el flujo
 
 | Componente | Conectividad | Qué hace |
 |------------|--------------|----------|
-| `Funnel` | N → 1 | Concatena múltiples streams en uno |
-| `Copy` | 1 → N | Duplica los datos hacia múltiples salidas |
-| `Switcher` | 1 → N | Enruta filas a distintas salidas según el valor de un campo |
+| [`Funnel`](docs/Funnel.md) | N → 1 | Concatena múltiples streams en uno |
+| [`Copy`](docs/Copy.md) | 1 → N | Duplica los datos hacia múltiples salidas |
+| [`Switcher`](docs/Switcher.md) | 1 → N | Enruta filas a distintas salidas según el valor de un campo |
 
 ### AI Transformers — transformación con LLM (1 entrada, 1 salida)
 
@@ -133,10 +133,10 @@ Reciben un DataFrame, lo envían como CSV al modelo con un prompt, y parsean la 
 
 | Componente | Proveedor | Import |
 |------------|-----------|--------|
-| `AnthropicPromptTransformer` | Anthropic (Claude) | `open_stage.anthropic.claude` |
-| `OpenAIPromptTransformer` | OpenAI (GPT) | `open_stage.open_ai.transformer` |
-| `GeminiPromptTransformer` | Google (Gemini) | `open_stage.google.gemini` |
-| `DeepSeekPromptTransformer` | DeepSeek | `open_stage.deepseek.transformer` |
+| [`AnthropicPromptTransformer`](docs/AnthropicPromptTransformer.md) | Anthropic (Claude) | `open_stage.anthropic.claude` |
+| [`OpenAIPromptTransformer`](docs/OpenAIPromptTransformer.md) | OpenAI (GPT) | `open_stage.open_ai.transformer` |
+| [`GeminiPromptTransformer`](docs/GeminiPromptTransformer.md) | Google (Gemini) | `open_stage.google.gemini` |
+| [`DeepSeekPromptTransformer`](docs/DeepSeekPromptTransformer.md) | DeepSeek | `open_stage.deepseek.transformer` |
 
 ---
 

@@ -26,8 +26,8 @@ pip install pandas
 
 ### Example 1: Simple Transformation (No Extra Arguments)
 ```python
-from src.core.common import Transformer, OpenOrigin, Printer
-from src.core.base import Pipe
+from open_stage.core.common import Transformer, OpenOrigin, Printer
+from open_stage.core.base import Pipe
 import pandas as pd
 
 # Define transformation function

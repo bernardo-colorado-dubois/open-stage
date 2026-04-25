@@ -28,9 +28,9 @@ pip install google-cloud-bigquery google-auth db-dtypes pandas
 
 ### Example 1: Simple Load (APPEND)
 ```python
-from src.google.cloud import GCPBigQueryDestination
-from src.core.base import Pipe
-from src.core.common import CSVOrigin
+from open_stage.google.bigquery import GCPBigQueryDestination
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin
 
 # Read data
 origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")

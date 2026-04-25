@@ -26,9 +26,9 @@ pip install sqlalchemy pymysql pandas
 
 ### Example 1: Simple Query
 ```python
-from src.mysql.common import MySQLOrigin
-from src.core.base import Pipe
-from src.core.common import Printer
+from open_stage.mysql.common import MySQLOrigin
+from open_stage.core.base import Pipe
+from open_stage.core.common import Printer
 
 # Create origin with query
 origin = MySQLOrigin(

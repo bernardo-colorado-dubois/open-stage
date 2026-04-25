@@ -26,9 +26,9 @@ pip install sqlalchemy pymysql pandas
 
 ### Example 1: Simple Load (APPEND)
 ```python
-from src.mysql.common import MySQLDestination
-from src.core.base import Pipe
-from src.core.common import CSVOrigin
+from open_stage.mysql.common import MySQLDestination
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin
 
 # Read data
 origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")

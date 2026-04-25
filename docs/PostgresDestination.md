@@ -26,9 +26,9 @@ pip install sqlalchemy psycopg2-binary pandas
 
 ### Example 1: Simple Load (APPEND)
 ```python
-from src.postgres.common import PostgresDestination
-from src.core.base import Pipe
-from src.core.common import CSVOrigin
+from open_stage.postgres.common import PostgresDestination
+from open_stage.core.base import Pipe
+from open_stage.core.common import CSVOrigin
 
 # Read data
 origin = CSVOrigin("reader", filepath_or_buffer="sales.csv")
