@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open-Stage — ETL Framework para Python</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-2: #161b22;
+      --bg-3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-2: #79c0ff;
+      --green: #3fb950;
+      --purple: #d2a8ff;
+      --orange: #ffa657;
+      --red: #ff7b72;
+      --yellow: #e3b341;
+      --radius: 8px;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--font-mono);
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      font-size: 14px;
+    }
+    .nav-links a { color: var(--text-muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary { background: var(--bg-3); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 96px 0 72px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88,166,255,.1);
+      border: 1px solid rgba(88,166,255,.3);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 .highlight { color: var(--accent); }
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 36px;
+      flex-wrap: wrap;
+    }
+    .hero-badges img { height: 20px; }
+
+    /* ── Pipeline diagram ── */
+    .pipeline-demo {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      margin: 64px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+    .pipeline-demo h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .pipeline-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: nowrap;
+      min-width: 600px;
+    }
+    .pipeline-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .pipeline-box {
+      border-radius: var(--radius);
+      padding: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+    .pipeline-box.origin { background: rgba(63,185,80,.12); border-color: rgba(63,185,80,.4); color: var(--green); }
+    .pipeline-box.node   { background: rgba(88,166,255,.12); border-color: rgba(88,166,255,.4); color: var(--accent); }
+    .pipeline-box.ai     { background: rgba(210,168,255,.12); border-color: rgba(210,168,255,.4); color: var(--purple); }
+    .pipeline-box.dest   { background: rgba(255,166,87,.12); border-color: rgba(255,166,87,.4); color: var(--orange); }
+    .pipeline-label { font-size: 11px; color: var(--text-muted); }
+    .pipe-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    .pipe-arrow svg { color: var(--text-muted); }
+    .pipe-name {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    /* ── Sections ── */
+    section { padding: 80px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin-bottom: 48px;
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .code-dot:nth-child(1) { background: #ff5f57; }
+    .code-dot:nth-child(2) { background: #febc2e; }
+    .code-dot:nth-child(3) { background: #28c840; }
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+    code { font-family: var(--font-mono); }
+
+    /* syntax colors */
+    .kw  { color: var(--red); }
+    .fn  { color: var(--purple); }
+    .str { color: var(--yellow); }
+    .cmt { color: #6e7681; font-style: italic; }
+    .cls { color: var(--green); }
+    .var { color: var(--accent-2); }
+    .num { color: var(--orange); }
+
+    /* ── How it works ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .step {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .step-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      margin-bottom: 12px;
+    }
+    .step h3 { font-size: 16px; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Components grid ── */
+    .comp-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .comp-tab {
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: var(--radius) var(--radius) 0 0;
+      color: var(--text-muted);
+      transition: all .15s;
+      border: 1px solid transparent;
+      border-bottom: none;
+      user-select: none;
+    }
+    .comp-tab.active {
+      color: var(--text);
+      background: var(--bg-2);
+      border-color: var(--border);
+      border-bottom-color: var(--bg-2);
+      margin-bottom: -1px;
+    }
+    .comp-panel { display: none; }
+    .comp-panel.active { display: block; }
+
+    .comp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .comp-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: border-color .15s;
+    }
+    .comp-card:hover { border-color: var(--accent); }
+    .comp-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .comp-name {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .comp-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+    }
+    .tag-origin  { background: rgba(63,185,80,.15);  color: var(--green); }
+    .tag-dest    { background: rgba(255,166,87,.15);  color: var(--orange); }
+    .tag-node    { background: rgba(88,166,255,.15);  color: var(--accent); }
+    .tag-router  { background: rgba(227,179,65,.15);  color: var(--yellow); }
+    .tag-ai      { background: rgba(210,168,255,.15); color: var(--purple); }
+    .comp-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .comp-io {
+      margin-top: 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #6e7681;
+    }
+
+    /* ── Examples ── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .example-card {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+    }
+    .example-header {
+      border-bottom: none;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    @media (max-width: 700px) {
+      .example-card { grid-template-columns: 1fr; }
+      .example-header { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+    .example-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .example-header {
+      padding: 16px 20px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .example-header h3 { font-size: 15px; margin-bottom: 4px; }
+    .example-header p  { font-size: 13px; color: var(--text-muted); }
+    .example-body { padding: 0; }
+    .example-body pre { font-size: 12.5px; padding: 16px 20px; }
+
+    /* ── AI section ── */
+    .ai-providers {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .ai-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      transition: border-color .15s, transform .15s;
+    }
+    .ai-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+    .ai-icon { font-size: 28px; margin-bottom: 10px; }
+    .ai-card h3 { font-size: 14px; font-family: var(--font-mono); margin-bottom: 4px; color: var(--purple); }
+    .ai-card p  { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Install ── */
+    .install-block {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-width: 640px;
+    }
+    .install-tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .install-tab {
+      padding: 8px 18px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color .15s;
+      border-bottom: 2px solid transparent;
+    }
+    .install-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+    .install-tab-panel { display: none; }
+    .install-tab-panel.active { display: block; }
+    .install-tab-panel pre { padding: 20px; font-size: 14px; }
+
+    .extras-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .extra-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .extra-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    .extra-deps { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      margin-top: 40px;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text);
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-copy { font-size: 13px; color: var(--text-muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 64px 0 48px; }
+      .pipeline-flow { justify-content: flex-start; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="container">
+    <span class="nav-logo">open<span>-stage</span></span>
+    <ul class="nav-links">
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#ejemplos">Ejemplos</a></li>
+      <li><a href="#ia">IA</a></li>
+      <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="docs/CSVOrigin.md">Docs</a></li>
+    </ul>
+    <div style="display:flex;gap:8px;">
+      <a href="https://github.com/bernardo-colorado-dubois/open-stage" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm3.5 11.5l-5-3V4h1v4l4.5 2.7-.5.8z"/></svg>
+      Python 3.8+ &nbsp;·&nbsp; MIT License
+    </div>
+    <h1>Open Stage<br><span class="highlight">ETL</span></h1>
+    <p>Open-Stage es un framework para construir pipelines de datos conectando componentes reutilizables. Inspirado en IBM DataStage.</p>
+    <div class="hero-actions">
+      <a href="#instalacion" class="btn btn-primary">Empezar</a>
+      <a href="#como-funciona" class="btn btn-secondary">Ver cómo funciona</a>
+    </div>
+    <div class="hero-badges">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
+      <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
+    </div>
+  </div>
+</div>
+
+<!-- ── Pipeline visual ── -->
+<div class="container">
+  <div class="pipeline-demo">
+    <h2>Arquitectura Pipes &amp; Filters</h2>
+    <div style="overflow-x:auto;">
+      <div class="pipeline-flow">
+        <div class="pipeline-node">
+          <div class="pipeline-box origin">CSVOrigin</div>
+          <div class="pipeline-label">Origin</div>
+        </div>
+        <div class="pipe-arrow" style="flex-direction:column;align-items:center;">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <line x1="0" y1="10" x2="26" y2="10" stroke="currentColor" stroke-width="1.5"/>
+            <polyline points="20,4 28,10 20,16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          <div class="pipe-name">pipe_1</div>
+        </div>
+        <div class="pipeline-node">
+          <div class="pipeline-box node">Filter</div>
+          <div class="pipeline-label">Node</div>
+        </div>
+        <div class="pipe-arrow" style="flex-direction:column;align-items:center;">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <line x1="0" y1="10" x2="26" y2="10" stroke="currentColor" stroke-width="1.5"/>
+            <polyline points="20,4 28,10 20,16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          <div class="pipe-name">pipe_2</div>
+        </div>
+        <div class="pipeline-node">
+          <div class="pipeline-box node">Aggregator</div>
+          <div class="pipeline-label">Node</div>
+        </div>
+        <div class="pipe-arrow" style="flex-direction:column;align-items:center;">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <line x1="0" y1="10" x2="26" y2="10" stroke="currentColor" stroke-width="1.5"/>
+            <polyline points="20,4 28,10 20,16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          <div class="pipe-name">pipe_3</div>
+        </div>
+        <div class="pipeline-node">
+          <div class="pipeline-box ai">AnthropicPromptTransformer</div>
+          <div class="pipeline-label">AI Node</div>
+        </div>
+        <div class="pipe-arrow" style="flex-direction:column;align-items:center;">
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <line x1="0" y1="10" x2="26" y2="10" stroke="currentColor" stroke-width="1.5"/>
+            <polyline points="20,4 28,10 20,16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          <div class="pipe-name">pipe_4</div>
+        </div>
+        <div class="pipeline-node">
+          <div class="pipeline-box dest">CSVDestination</div>
+          <div class="pipeline-label">Destination</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Cómo funciona ── -->
+<section id="como-funciona">
+  <div class="container">
+    <div class="section-label">Cómo funciona</div>
+    <h2 class="section-title">Simple. Declarativo. Componible.</h2>
+    <p class="section-sub">Construye pipelines conectando tres tipos de componentes con pipes. Los datos fluyen de izquierda a derecha.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01 / ORIGIN</div>
+        <h3>Produce datos</h3>
+        <p>Lee un CSV, consulta una base de datos, llama una API REST. Un Origin no tiene entradas y genera exactamente una salida.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02 / NODE</div>
+        <h3>Transforma datos</h3>
+        <p>Filtra, agrega, une, copia, distribuye. Los Nodes reciben datos, los procesan y los reenvían al siguiente componente.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03 / DESTINATION</div>
+        <h3>Escribe datos</h3>
+        <p>Guarda en CSV, carga en PostgreSQL, sube a BigQuery. Una Destination no tiene salidas — es el final del pipeline.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04 / PUMP</div>
+        <h3>Ejecuta con un llamado</h3>
+        <p>Una vez conectados los componentes, <code>origin.pump()</code> dispara todo el pipeline. Sin corchetes de orquestación ni DAGs.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;">
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+          <span>pipeline.py</span>
+          <span></span>
+        </div>
+        <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> <span class="cls">CSVOrigin</span>, <span class="cls">Filter</span>, <span class="cls">Aggregator</span>, <span class="cls">CSVDestination</span>
+
+<span class="cmt"># 1. Definir componentes</span>
+origin  = <span class="cls">CSVOrigin</span>(<span class="str">"ventas"</span>, filepath_or_buffer=<span class="str">"ventas.csv"</span>)
+filtro  = <span class="cls">Filter</span>(<span class="str">"solo_2024"</span>, field=<span class="str">"año"</span>, condition=<span class="str">"="</span>, value_or_values=<span class="num">2024</span>)
+agrega  = <span class="cls">Aggregator</span>(<span class="str">"por_region"</span>, key=<span class="str">"region"</span>, agg_field_name=<span class="str">"total"</span>,
+                     agg_type=<span class="str">"sum"</span>, field_to_agg=<span class="str">"monto"</span>)
+destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>, path_or_buf=<span class="str">"ventas_2024.csv"</span>, index=<span class="cls">False</span>)
+
+<span class="cmt"># 2. Conectar con pipes (method chaining)</span>
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filtro)
+filtro.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(agrega)
+agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(destino)
+
+<span class="cmt"># 3. Ejecutar</span>
+origin.pump()</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Componentes ── -->
+<section id="componentes">
+  <div class="container">
+    <div class="section-label">Componentes</div>
+    <h2 class="section-title">Todo lo que necesitas, listo para usar</h2>
+    <p class="section-sub">Componentes con conectividad validada en construcción. Si conectas mal, falla con un error claro, no en tiempo de ejecución.</p>
+
+    <div class="comp-tabs" id="compTabs">
+      <div class="comp-tab active" data-panel="origins">Origins</div>
+      <div class="comp-tab" data-panel="destinations">Destinations</div>
+      <div class="comp-tab" data-panel="transformers">Transformers</div>
+      <div class="comp-tab" data-panel="routers">Routers</div>
+    </div>
+
+    <!-- Origins -->
+    <div class="comp-panel active" id="panel-origins">
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/CSVOrigin.md">CSVOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Lee un CSV usando <code>pandas.read_csv</code>. Pasa <code>**kwargs</code> a pandas.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/OpenOrigin.md">OpenOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Envuelve un DataFrame existente para inyectarlo en el pipeline.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/APIRestOrigin.md">APIRestOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Consume un endpoint REST y normaliza la respuesta JSON a DataFrame.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/PostgresOrigin.md">PostgresOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Ejecuta una consulta SQL en PostgreSQL. Soporta <code>before_query</code>, <code>after_query</code>, parámetros y <code>max_results</code>.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/MySQLOrigin.md">MySQLOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Ejecuta una consulta SQL en MySQL. Mismas opciones avanzadas que PostgresOrigin.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/GCPBigQueryOrigin.md">GCPBigQueryOrigin</a></span>
+            <span class="comp-tag tag-origin">Origin</span>
+          </div>
+          <div class="comp-desc">Consulta Google BigQuery con autenticación por service account. Soporta parámetros y <code>max_results</code>.</div>
+          <div class="comp-io">0 entradas → 1 salida</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Destinations -->
+    <div class="comp-panel" id="panel-destinations">
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Printer.md">Printer</a></span>
+            <span class="comp-tag tag-dest">Destination</span>
+          </div>
+          <div class="comp-desc">Imprime el DataFrame en consola. Ideal para debugging de pipelines.</div>
+          <div class="comp-io">1 entrada → 0 salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/CSVDestination.md">CSVDestination</a></span>
+            <span class="comp-tag tag-dest">Destination</span>
+          </div>
+          <div class="comp-desc">Escribe un CSV usando <code>pandas.to_csv</code>. Pasa <code>**kwargs</code> a pandas.</div>
+          <div class="comp-io">1 entrada → 0 salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/PostgresDestination.md">PostgresDestination</a></span>
+            <span class="comp-tag tag-dest">Destination</span>
+          </div>
+          <div class="comp-desc">Carga un DataFrame en PostgreSQL. Soporta <code>if_exists</code>, schema, <code>before_query</code> y <code>after_query</code>.</div>
+          <div class="comp-io">1 entrada → 0 salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/MySQLDestination.md">MySQLDestination</a></span>
+            <span class="comp-tag tag-dest">Destination</span>
+          </div>
+          <div class="comp-desc">Carga un DataFrame en MySQL. Mismas opciones de control que PostgresDestination.</div>
+          <div class="comp-io">1 entrada → 0 salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/GCPBigQueryDestination.md">GCPBigQueryDestination</a></span>
+            <span class="comp-tag tag-dest">Destination</span>
+          </div>
+          <div class="comp-desc">Carga en BigQuery. Soporta particionamiento, clustering, <code>write_disposition</code> y <code>schema_update_options</code>.</div>
+          <div class="comp-io">1 entrada → 0 salidas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transformers -->
+    <div class="comp-panel" id="panel-transformers">
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Filter.md">Filter</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Filtra filas por condición. Operadores: <code>&lt; &gt; &lt;= &gt;= != = in not_in between</code>.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Aggregator.md">Aggregator</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Agrupa por clave y agrega. Funciones: <code>sum count mean min max first last</code>.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Transformer.md">Transformer</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Aplica cualquier función Python que reciba un DataFrame y devuelva un DataFrame.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Joiner.md">Joiner</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Une dos DataFrames por clave. Tipos: <code>inner left right</code>. Soporta claves compuestas.</div>
+          <div class="comp-io">2 entradas → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/DeleteColumns.md">DeleteColumns</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Elimina una lista de columnas del DataFrame.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/RemoveDuplicates.md">RemoveDuplicates</a></span>
+            <span class="comp-tag tag-node">Node</span>
+          </div>
+          <div class="comp-desc">Desduplicación por clave, con sort y criterio de retención (<code>first</code> / <code>last</code>).</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Routers -->
+    <div class="comp-panel" id="panel-routers">
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Copy.md">Copy</a></span>
+            <span class="comp-tag tag-router">Router</span>
+          </div>
+          <div class="comp-desc">Duplica el DataFrame hacia múltiples salidas. Cada salida recibe una copia independiente.</div>
+          <div class="comp-io">1 entrada → N salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Switcher.md">Switcher</a></span>
+            <span class="comp-tag tag-router">Router</span>
+          </div>
+          <div class="comp-desc">Enruta cada fila a un pipe distinto según el valor de un campo. Mapeo <code>valor → nombre_pipe</code>.</div>
+          <div class="comp-io">1 entrada → N salidas</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/Funnel.md">Funnel</a></span>
+            <span class="comp-tag tag-router">Router</span>
+          </div>
+          <div class="comp-desc">Concatena múltiples streams en uno. Acepta cualquier número de entradas y emite cuando todas llegaron.</div>
+          <div class="comp-io">N entradas → 1 salida</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Ejemplos ── -->
+<section id="ejemplos">
+  <div class="container">
+    <div class="section-label">Ejemplos</div>
+    <h2 class="section-title">Casos de uso reales</h2>
+    <p class="section-sub">Desde una migración entre bases de datos hasta transformación con IA — todo con el mismo patrón.</p>
+
+    <div class="examples-grid">
+      <div class="example-card">
+        <div class="example-header">
+          <h3>Filtrar y agregar</h3>
+          <p>CSV → Filter → Aggregator → CSV</p>
+        </div>
+        <div class="example-body">
+          <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> (
+    <span class="cls">CSVOrigin</span>, <span class="cls">Filter</span>, <span class="cls">Aggregator</span>, <span class="cls">CSVDestination</span>
+)
+
+origin = <span class="cls">CSVOrigin</span>(<span class="str">"ventas"</span>, filepath_or_buffer=<span class="str">"ventas.csv"</span>)
+filtro = <span class="cls">Filter</span>(<span class="str">"alto_valor"</span>, field=<span class="str">"monto"</span>,
+               condition=<span class="str">">"</span>, value_or_values=<span class="num">1000</span>)
+agrega = <span class="cls">Aggregator</span>(<span class="str">"por_region"</span>, key=<span class="str">"region"</span>,
+                   agg_field_name=<span class="str">"total"</span>, agg_type=<span class="str">"sum"</span>,
+                   field_to_agg=<span class="str">"monto"</span>)
+destino = <span class="cls">CSVDestination</span>(<span class="str">"resumen"</span>,
+                         path_or_buf=<span class="str">"resumen.csv"</span>, index=<span class="cls">False</span>)
+
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filtro)
+filtro.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(agrega)
+agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(destino)
+origin.pump()</pre>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-header">
+          <h3>Migración entre bases de datos</h3>
+          <p>MySQL → PostgreSQL</p>
+        </div>
+        <div class="example-body">
+          <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.mysql.common</span> <span class="kw">import</span> <span class="cls">MySQLOrigin</span>
+<span class="kw">from</span> <span class="var">open_stage.postgres.common</span> <span class="kw">import</span> <span class="cls">PostgresDestination</span>
+
+origin = <span class="cls">MySQLOrigin</span>(
+    name=<span class="str">"fuente"</span>,
+    host=<span class="str">"localhost"</span>, database=<span class="str">"origen"</span>,
+    user=<span class="str">"root"</span>, password=<span class="str">"..."</span>,
+    query=<span class="str">"SELECT * FROM clientes WHERE activo = 1"</span>,
+)
+destino = <span class="cls">PostgresDestination</span>(
+    name=<span class="str">"destino"</span>,
+    host=<span class="str">"localhost"</span>, database=<span class="str">"destino"</span>,
+    user=<span class="str">"postgres"</span>, password=<span class="str">"..."</span>,
+    table=<span class="str">"clientes"</span>, if_exists=<span class="str">"append"</span>,
+)
+
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"migrar"</span>)).set_destination(destino)
+origin.pump()</pre>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-header">
+          <h3>Bifurcación de flujo</h3>
+          <p>Switcher distribuye, Funnel reúne</p>
+        </div>
+        <div class="example-body">
+          <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> (
+    <span class="cls">OpenOrigin</span>, <span class="cls">Switcher</span>, <span class="cls">Funnel</span>, <span class="cls">Printer</span>
+)
+<span class="kw">import</span> <span class="var">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+
+df = pd.DataFrame({
+    <span class="str">"producto"</span>:  [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>],
+    <span class="str">"categoria"</span>: [<span class="str">"elec"</span>, <span class="str">"ropa"</span>, <span class="str">"elec"</span>, <span class="str">"ropa"</span>],
+})
+
+origin   = <span class="cls">OpenOrigin</span>(<span class="str">"datos"</span>, df)
+switcher = <span class="cls">Switcher</span>(<span class="str">"por_cat"</span>, field=<span class="str">"categoria"</span>,
+                   mapping={<span class="str">"elec"</span>: <span class="str">"p_elec"</span>, <span class="str">"ropa"</span>: <span class="str">"p_ropa"</span>})
+funnel   = <span class="cls">Funnel</span>(<span class="str">"reunir"</span>)
+printer  = <span class="cls">Printer</span>(<span class="str">"salida"</span>)
+
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"entrada"</span>)).set_destination(switcher)
+switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_elec"</span>)).set_destination(funnel)
+switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_ropa"</span>)).set_destination(funnel)
+funnel.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"salida"</span>)).set_destination(printer)
+origin.pump()</pre>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-header">
+          <h3>Transformación con función propia</h3>
+          <p>Cualquier lógica Python como Node</p>
+        </div>
+        <div class="example-body">
+          <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> (
+    <span class="cls">CSVOrigin</span>, <span class="cls">Transformer</span>, <span class="cls">CSVDestination</span>
+)
+
+<span class="kw">def</span> <span class="fn">aplicar_impuesto</span>(df, tasa, envio):
+    df = df.copy()
+    df[<span class="str">"precio_final"</span>] = df[<span class="str">"precio"</span>] * (<span class="num">1</span> + tasa) + envio
+    <span class="kw">return</span> df
+
+origin = <span class="cls">CSVOrigin</span>(<span class="str">"productos"</span>, filepath_or_buffer=<span class="str">"productos.csv"</span>)
+tx = <span class="cls">Transformer</span>(
+    name=<span class="str">"precio_final"</span>,
+    transformer_function=aplicar_impuesto,
+    transformer_kwargs={<span class="str">"tasa"</span>: <span class="num">0.16</span>, <span class="str">"envio"</span>: <span class="num">50</span>},
+)
+destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>,
+                         path_or_buf=<span class="str">"con_precio.csv"</span>, index=<span class="cls">False</span>)
+
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(tx)
+tx.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
+origin.pump()</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AI Transformers ── -->
+<section id="ia">
+  <div class="container">
+    <div class="section-label">AI Transformers</div>
+    <h2 class="section-title">LLMs como Nodes en tu pipeline</h2>
+    <p class="section-sub">Los AI Transformers reciben un DataFrame, lo serializan a CSV, lo envían al modelo con tu prompt, y parsean la respuesta de vuelta a DataFrame.</p>
+
+    <div class="ai-providers">
+      <div class="ai-card">
+        <div class="ai-icon">&#129302;</div>
+        <h3>AnthropicPromptTransformer</h3>
+        <p>Claude — Anthropic</p>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">&#129504;</div>
+        <h3>OpenAIPromptTransformer</h3>
+        <p>GPT — OpenAI</p>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">&#127796;</div>
+        <h3>GeminiPromptTransformer</h3>
+        <p>Gemini — Google</p>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">&#128300;</div>
+        <h3>DeepSeekPromptTransformer</h3>
+        <p>DeepSeek R1 / V3</p>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;">
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+          <span>ai_pipeline.py</span>
+          <span></span>
+        </div>
+        <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
+<span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> <span class="cls">CSVOrigin</span>, <span class="cls">CSVDestination</span>
+<span class="kw">from</span> <span class="var">open_stage.anthropic.claude</span> <span class="kw">import</span> <span class="cls">AnthropicPromptTransformer</span>
+
+origin = <span class="cls">CSVOrigin</span>(<span class="str">"resenas"</span>, filepath_or_buffer=<span class="str">"resenas.csv"</span>)
+
+ai = <span class="cls">AnthropicPromptTransformer</span>(
+    name=<span class="str">"sentimiento"</span>,
+    model=<span class="str">"claude-sonnet-4-5-20250929"</span>,
+    api_key=<span class="str">"sk-ant-..."</span>,
+    prompt=<span class="str">"Agrega una columna 'sentimiento' con: positivo, neutro o negativo, "</span>
+           <span class="str">"basándote en la columna 'resena'."</span>,
+)
+
+destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>, path_or_buf=<span class="str">"clasificadas.csv"</span>, index=<span class="cls">False</span>)
+
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(ai)
+ai.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
+
+origin.pump()</pre>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px;">
+      <p style="font-size:14px; color: var(--text-muted); line-height: 1.7;">
+        <strong style="color: var(--text);">Flujo interno del AI Transformer:</strong><br>
+        1. Recibe el DataFrame &nbsp;&rarr;&nbsp;
+        2. Lo serializa a CSV &nbsp;&rarr;&nbsp;
+        3. Lo envía al LLM junto con el prompt &nbsp;&rarr;&nbsp;
+        4. Parsea la respuesta CSV de vuelta a DataFrame &nbsp;&rarr;&nbsp;
+        5. Lo reenvía al siguiente componente
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Instalación ── -->
+<section id="instalacion">
+  <div class="container">
+    <div class="section-label">Instalación</div>
+    <h2 class="section-title">En marcha en segundos</h2>
+    <p class="section-sub">Instala solo las dependencias que necesitas con extras opcionales.</p>
+
+    <div class="install-block">
+      <div class="install-tabs" id="installTabs">
+        <div class="install-tab active" data-panel="inst-all">Todo</div>
+        <div class="install-tab" data-panel="inst-postgres">Postgres</div>
+        <div class="install-tab" data-panel="inst-ai">IA</div>
+        <div class="install-tab" data-panel="inst-custom">Personalizado</div>
+      </div>
+      <div class="install-tab-panel active" id="panel-inst-all">
+        <pre><span class="cmt"># Instalar con todos los extras</span>
+pip install -e <span class="str">".[all]"</span></pre>
+      </div>
+      <div class="install-tab-panel" id="panel-inst-postgres">
+        <pre><span class="cmt"># Solo PostgreSQL</span>
+pip install -e <span class="str">".[postgres]"</span></pre>
+      </div>
+      <div class="install-tab-panel" id="panel-inst-ai">
+        <pre><span class="cmt"># Anthropic + OpenAI</span>
+pip install -e <span class="str">".[anthropic,openai]"</span></pre>
+      </div>
+      <div class="install-tab-panel" id="panel-inst-custom">
+        <pre><span class="cmt"># Combina lo que necesites</span>
+pip install -e <span class="str">".[postgres,anthropic,bigquery]"</span></pre>
+      </div>
+    </div>
+
+    <div class="extras-grid" style="margin-top: 32px;">
+      <div class="extra-card">
+        <div class="extra-name">postgres</div>
+        <div class="extra-deps">sqlalchemy · psycopg2-binary</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">mysql</div>
+        <div class="extra-deps">sqlalchemy · pymysql</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">bigquery</div>
+        <div class="extra-deps">google-cloud-bigquery · db-dtypes · google-auth</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">anthropic</div>
+        <div class="extra-deps">anthropic</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">openai</div>
+        <div class="extra-deps">openai</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">deepseek</div>
+        <div class="extra-deps">openai</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">gemini</div>
+        <div class="extra-deps">google-genai · google-generativeai</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-name">all</div>
+        <div class="extra-deps">todos los anteriores</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">open<span>-stage</span></span>
+      <span class="footer-copy">MIT &copy; 2025 Bernardo Colorado Dubois</span>
+      <div style="display:flex;gap:16px;font-size:13px;">
+        <a href="README.md" style="color:var(--text-muted)">README</a>
+        <a href="docs/CSVOrigin.md" style="color:var(--text-muted)">Docs</a>
+        <a href="https://github.com/bernardo-colorado-dubois/open-stage" style="color:var(--text-muted)">GitHub</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Component tabs
+  document.getElementById("compTabs").addEventListener("click", function(e) {
+    var tab = e.target.closest(".comp-tab");
+    if (!tab) return;
+    document.querySelectorAll(".comp-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".comp-panel").forEach(function(p) { p.classList.remove("active"); });
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
+  });
+
+  // Install tabs
+  document.getElementById("installTabs").addEventListener("click", function(e) {
+    var tab = e.target.closest(".install-tab");
+    if (!tab) return;
+    document.querySelectorAll(".install-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".install-tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
+  });
+</script>
+
+</body>
+</html>
