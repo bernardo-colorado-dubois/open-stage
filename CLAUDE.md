@@ -22,7 +22,7 @@ pip install -e ".[all]"
 pip install -e ".[postgres,anthropic]"
 
 # Ejecutar un pipeline de ejemplo
-venv/bin/python sample_1_csv_print.py
+venv/bin/python sample_01_csv_print.py
 
 # Limpiar cache de Python
 ./delete_python_cache.sh
@@ -282,10 +282,13 @@ tests/
 ├── test_base.py      # Tests de DataPackage, Pipe y Mixins
 └── test_common.py    # Tests de todos los componentes core
 
-sample_*.py           # Ejemplos de integración (requieren credenciales reales)
-                      # Cada archivo arranca con un comentario horizontal que dibuja el grafo del pipeline:
-                      #   [Nodo] --pipe--> [Nodo] --pipe--> [Nodo]
-                      # Las bifurcaciones (Switcher, Copy) se representan con \ y | alineados bajo el nodo que divide.
+sample_01_csv_print.py                        # Ejemplos de integración numerados (01–13)
+sample_02_csv_filter_delete_switch_agg.py     # Requieren credenciales reales
+...                                           # Cada archivo arranca con un comentario que dibuja el grafo:
+sample_13_openai_sentiment.py                 #   [Nodo] --pipe--> [Nodo] --pipe--> [Nodo]
+                                              # Las bifurcaciones usan \ y | alineados bajo el nodo que divide.
+docs/                 # Un .md por componente (24 en total)
+index.html            # Landing page estática del proyecto (sin build step)
 pyproject.toml
 requirements.txt
 ```
