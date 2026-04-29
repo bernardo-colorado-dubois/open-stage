@@ -485,6 +485,33 @@
       .pipeline-flow { justify-content: flex-start; }
       .footer-inner { flex-direction: column; align-items: flex-start; }
     }
+
+    /* ── Mermaid diagrams ── */
+    .code-with-diagram .code-block { border-radius: var(--radius) var(--radius) 0 0; }
+    .diagram-block {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-top: 1px dashed var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 16px 20px 20px;
+      overflow-x: auto;
+    }
+    .diagram-section {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--border);
+      padding: 16px 20px 20px;
+      overflow-x: auto;
+    }
+    .diagram-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .mermaid { display: flex; justify-content: center; }
+    .mermaid svg { max-width: 100%; height: auto; }
   </style>
 </head>
 <body>
@@ -619,7 +646,7 @@
       </div>
     </div>
 
-    <div style="margin-top:48px;">
+    <div class="code-with-diagram" style="margin-top:48px;">
       <div class="code-block">
         <div class="code-header">
           <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
@@ -643,6 +670,18 @@ agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</spa
 
 <span class="cmt"># 3. Ejecutar</span>
 origin.pump()</pre>
+      </div>
+      <div class="diagram-block">
+        <div class="diagram-label">Pipeline</div>
+        <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([CSVOrigin]):::origin -->|p1| B[Filter]:::nd
+    B -->|p2| C[Aggregator]:::nd
+    C -->|p3| D([CSVDestination]):::dest
+        </div>
       </div>
     </div>
   </div>
@@ -881,6 +920,18 @@ filtro.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</spa
 agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(destino)
 origin.pump()</pre>
         </div>
+        <div class="diagram-section">
+          <div class="diagram-label">Pipeline</div>
+          <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([CSVOrigin]):::origin -->|p1| B[Filter]:::nd
+    B -->|p2| C[Aggregator]:::nd
+    C -->|p3| D([CSVDestination]):::dest
+          </div>
+        </div>
       </div>
 
       <div class="example-card">
@@ -908,6 +959,15 @@ destino = <span class="cls">PostgresDestination</span>(
 
 origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"migrar"</span>)).set_destination(destino)
 origin.pump()</pre>
+        </div>
+        <div class="diagram-section">
+          <div class="diagram-label">Pipeline</div>
+          <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([MySQLOrigin]):::origin -->|migrar| B([PostgresDestination]):::dest
+          </div>
         </div>
       </div>
 
@@ -940,6 +1000,19 @@ switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_ropa
 funnel.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"salida"</span>)).set_destination(printer)
 origin.pump()</pre>
         </div>
+        <div class="diagram-section">
+          <div class="diagram-label">Pipeline</div>
+          <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([OpenOrigin]):::origin -->|entrada| B[Switcher]:::nd
+    B -->|p_elec| C[Funnel]:::nd
+    B -->|p_ropa| C
+    C -->|salida| D([Printer]):::dest
+          </div>
+        </div>
       </div>
 
       <div class="example-card">
@@ -970,6 +1043,17 @@ destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"<
 origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(tx)
 tx.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
 origin.pump()</pre>
+        </div>
+        <div class="diagram-section">
+          <div class="diagram-label">Pipeline</div>
+          <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([CSVOrigin]):::origin -->|p1| B[Transformer]:::nd
+    B -->|p2| C([CSVDestination]):::dest
+          </div>
         </div>
       </div>
     </div>
@@ -1006,7 +1090,7 @@ origin.pump()</pre>
       </div>
     </div>
 
-    <div style="margin-top:40px;">
+    <div class="code-with-diagram" style="margin-top:40px;">
       <div class="code-block">
         <div class="code-header">
           <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
@@ -1033,6 +1117,17 @@ origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</spa
 ai.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
 
 origin.pump()</pre>
+      </div>
+      <div class="diagram-block">
+        <div class="diagram-label">Pipeline</div>
+        <div class="mermaid">
+flowchart LR
+    classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
+    classDef ai fill:#1c1030,stroke:#d2a8ff,color:#d2a8ff
+    classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
+    A([CSVOrigin]):::origin -->|p1| B[AnthropicPromptTransformer]:::ai
+    B -->|p2| C([CSVDestination]):::dest
+        </div>
       </div>
     </div>
 
@@ -1133,6 +1228,24 @@ pip install -e <span class="str">".[postgres,anthropic,bigquery]"</span></pre>
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      background: '#0d1117',
+      primaryColor: '#21262d',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#8b949e',
+      edgeLabelBackground: '#161b22',
+      clusterBkg: '#161b22',
+    },
+    flowchart: { curve: 'basis' },
+  });
+  mermaid.run({ querySelector: '.mermaid' });
+</script>
 <script>
   // Component tabs
   document.getElementById("compTabs").addEventListener("click", function(e) {
