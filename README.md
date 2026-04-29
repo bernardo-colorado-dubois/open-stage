@@ -385,37 +385,6 @@ logging.getLogger("open_stage.core").setLevel(logging.DEBUG)
 
 ---
 
-## Environment variables
-
-Create a `.env` file in the project root:
-
-```dotenv
-# PostgreSQL
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=my_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=secret
-
-# MySQL
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_DB=my_db
-MYSQL_USER=root
-MYSQL_PASSWORD=secret
-
-# Google (BigQuery and Gemini)
-GCP_PROJECT=my-project
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-
-# AI providers
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-DEEPSEEK_API_KEY=...
-```
-
----
-
 ## Tests
 
 ```bash
