@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open-Stage — ETL Framework para Python</title>
+  <title>Open-Stage — ETL Framework for Python</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -521,11 +521,11 @@
   <div class="container">
     <span class="nav-logo">open<span>-stage</span></span>
     <ul class="nav-links">
-      <li><a href="#como-funciona">Cómo funciona</a></li>
-      <li><a href="#componentes">Componentes</a></li>
-      <li><a href="#ejemplos">Ejemplos</a></li>
-      <li><a href="#ia">IA</a></li>
-      <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#components">Components</a></li>
+      <li><a href="#examples">Examples</a></li>
+      <li><a href="#ai">AI</a></li>
+      <li><a href="#installation">Installation</a></li>
       <li><a href="docs/CSVOrigin.md">Docs</a></li>
     </ul>
     <div style="display:flex;gap:8px;">
@@ -545,10 +545,10 @@
       Python 3.8+ &nbsp;·&nbsp; MIT License
     </div>
     <h1>Open Stage<br><span class="highlight">ETL</span></h1>
-    <p>Open-Stage es un framework para construir pipelines de datos conectando componentes reutilizables. Inspirado en IBM DataStage.</p>
+    <p>Open-Stage is a framework for building data pipelines by connecting reusable components. Inspired by IBM DataStage.</p>
     <div class="hero-actions">
-      <a href="#instalacion" class="btn btn-primary">Empezar</a>
-      <a href="#como-funciona" class="btn btn-secondary">Ver cómo funciona</a>
+      <a href="#installation" class="btn btn-primary">Get Started</a>
+      <a href="#how-it-works" class="btn btn-secondary">See how it works</a>
     </div>
     <div class="hero-badges">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
@@ -560,7 +560,7 @@
 <!-- ── Pipeline visual ── -->
 <div class="container">
   <div class="pipeline-demo">
-    <h2>Arquitectura Pipes &amp; Filters</h2>
+    <h2>Pipes &amp; Filters Architecture</h2>
     <div style="overflow-x:auto;">
       <div class="pipeline-flow">
         <div class="pipeline-node">
@@ -616,33 +616,33 @@
   </div>
 </div>
 
-<!-- ── Cómo funciona ── -->
-<section id="como-funciona">
+<!-- ── How it works ── -->
+<section id="how-it-works">
   <div class="container">
-    <div class="section-label">Cómo funciona</div>
-    <h2 class="section-title">Simple. Declarativo. Componible.</h2>
-    <p class="section-sub">Construye pipelines conectando tres tipos de componentes con pipes. Los datos fluyen de izquierda a derecha.</p>
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Simple. Declarative. Composable.</h2>
+    <p class="section-sub">Build pipelines by connecting three types of components with pipes. Data flows left to right.</p>
 
     <div class="steps">
       <div class="step">
         <div class="step-num">01 / ORIGIN</div>
-        <h3>Produce datos</h3>
-        <p>Lee un CSV, consulta una base de datos, llama una API REST. Un Origin no tiene entradas y genera exactamente una salida.</p>
+        <h3>Produce data</h3>
+        <p>Read a CSV, query a database, call a REST API. An Origin has no inputs and generates exactly one output.</p>
       </div>
       <div class="step">
         <div class="step-num">02 / NODE</div>
-        <h3>Transforma datos</h3>
-        <p>Filtra, agrega, une, copia, distribuye. Los Nodes reciben datos, los procesan y los reenvían al siguiente componente.</p>
+        <h3>Transform data</h3>
+        <p>Filter, aggregate, join, copy, route. Nodes receive data, process it, and forward it to the next component.</p>
       </div>
       <div class="step">
         <div class="step-num">03 / DESTINATION</div>
-        <h3>Escribe datos</h3>
-        <p>Guarda en CSV, carga en PostgreSQL, sube a BigQuery. Una Destination no tiene salidas — es el final del pipeline.</p>
+        <h3>Write data</h3>
+        <p>Save to CSV, load into PostgreSQL, upload to BigQuery. A Destination has no outputs — it's the end of the pipeline.</p>
       </div>
       <div class="step">
         <div class="step-num">04 / PUMP</div>
-        <h3>Ejecuta con un llamado</h3>
-        <p>Una vez conectados los componentes, <code>origin.pump()</code> dispara todo el pipeline. Sin corchetes de orquestación ni DAGs.</p>
+        <h3>Run with one call</h3>
+        <p>Once the components are connected, <code>origin.pump()</code> fires the entire pipeline. No orchestration wrappers or DAGs needed.</p>
       </div>
     </div>
 
@@ -656,19 +656,19 @@
         <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
 <span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> <span class="cls">CSVOrigin</span>, <span class="cls">Filter</span>, <span class="cls">Aggregator</span>, <span class="cls">CSVDestination</span>
 
-<span class="cmt"># 1. Definir componentes</span>
-origin  = <span class="cls">CSVOrigin</span>(<span class="str">"ventas"</span>, filepath_or_buffer=<span class="str">"ventas.csv"</span>)
-filtro  = <span class="cls">Filter</span>(<span class="str">"solo_2024"</span>, field=<span class="str">"año"</span>, condition=<span class="str">"="</span>, value_or_values=<span class="num">2024</span>)
-agrega  = <span class="cls">Aggregator</span>(<span class="str">"por_region"</span>, key=<span class="str">"region"</span>, agg_field_name=<span class="str">"total"</span>,
-                     agg_type=<span class="str">"sum"</span>, field_to_agg=<span class="str">"monto"</span>)
-destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>, path_or_buf=<span class="str">"ventas_2024.csv"</span>, index=<span class="cls">False</span>)
+<span class="cmt"># 1. Define components</span>
+origin      = <span class="cls">CSVOrigin</span>(<span class="str">"sales"</span>, filepath_or_buffer=<span class="str">"sales.csv"</span>)
+filter_node = <span class="cls">Filter</span>(<span class="str">"only_2024"</span>, field=<span class="str">"year"</span>, condition=<span class="str">"="</span>, value_or_values=<span class="num">2024</span>)
+aggregator  = <span class="cls">Aggregator</span>(<span class="str">"by_region"</span>, key=<span class="str">"region"</span>, agg_field_name=<span class="str">"total"</span>,
+                          agg_type=<span class="str">"sum"</span>, field_to_agg=<span class="str">"amount"</span>)
+dest        = <span class="cls">CSVDestination</span>(<span class="str">"result"</span>, path_or_buf=<span class="str">"sales_2024.csv"</span>, index=<span class="cls">False</span>)
 
-<span class="cmt"># 2. Conectar con pipes (method chaining)</span>
-origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filtro)
-filtro.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(agrega)
-agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(destino)
+<span class="cmt"># 2. Connect with pipes (method chaining)</span>
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filter_node)
+filter_node.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(aggregator)
+aggregator.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(dest)
 
-<span class="cmt"># 3. Ejecutar</span>
+<span class="cmt"># 3. Run</span>
 origin.pump()</pre>
       </div>
       <div class="diagram-block">
@@ -687,12 +687,12 @@ flowchart LR
   </div>
 </section>
 
-<!-- ── Componentes ── -->
-<section id="componentes">
+<!-- ── Components ── -->
+<section id="components">
   <div class="container">
-    <div class="section-label">Componentes</div>
-    <h2 class="section-title">Todo lo que necesitas, listo para usar</h2>
-    <p class="section-sub">Componentes con conectividad validada en construcción. Si conectas mal, falla con un error claro, no en tiempo de ejecución.</p>
+    <div class="section-label">Components</div>
+    <h2 class="section-title">Everything you need, ready to use</h2>
+    <p class="section-sub">Components with connectivity validated at construction time. Wire them wrong and you get a clear error immediately, not at runtime.</p>
 
     <div class="comp-tabs" id="compTabs">
       <div class="comp-tab active" data-panel="origins">Origins</div>
@@ -710,48 +710,48 @@ flowchart LR
             <span class="comp-name"><a href="docs/CSVOrigin.md">CSVOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Lee un CSV usando <code>pandas.read_csv</code>. Pasa <code>**kwargs</code> a pandas.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Reads a CSV using <code>pandas.read_csv</code>. Passes <code>**kwargs</code> to pandas.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/OpenOrigin.md">OpenOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Envuelve un DataFrame existente para inyectarlo en el pipeline.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Wraps an existing DataFrame to inject it into the pipeline.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/APIRestOrigin.md">APIRestOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Consume un endpoint REST y normaliza la respuesta JSON a DataFrame.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Consumes a REST endpoint and normalizes the JSON response to a DataFrame.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/PostgresOrigin.md">PostgresOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Ejecuta una consulta SQL en PostgreSQL. Soporta <code>before_query</code>, <code>after_query</code>, parámetros y <code>max_results</code>.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Executes a SQL query on PostgreSQL. Supports <code>before_query</code>, <code>after_query</code>, parameters, and <code>max_results</code>.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/MySQLOrigin.md">MySQLOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Ejecuta una consulta SQL en MySQL. Mismas opciones avanzadas que PostgresOrigin.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Executes a SQL query on MySQL. Same advanced options as PostgresOrigin.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/GCPBigQueryOrigin.md">GCPBigQueryOrigin</a></span>
             <span class="comp-tag tag-origin">Origin</span>
           </div>
-          <div class="comp-desc">Consulta Google BigQuery con autenticación por service account. Soporta parámetros y <code>max_results</code>.</div>
-          <div class="comp-io">0 entradas → 1 salida</div>
+          <div class="comp-desc">Queries Google BigQuery with service account authentication. Supports parameters and <code>max_results</code>.</div>
+          <div class="comp-io">0 inputs → 1 output</div>
         </div>
       </div>
     </div>
@@ -764,40 +764,40 @@ flowchart LR
             <span class="comp-name"><a href="docs/Printer.md">Printer</a></span>
             <span class="comp-tag tag-dest">Destination</span>
           </div>
-          <div class="comp-desc">Imprime el DataFrame en consola. Ideal para debugging de pipelines.</div>
-          <div class="comp-io">1 entrada → 0 salidas</div>
+          <div class="comp-desc">Prints the DataFrame to the console. Ideal for pipeline debugging.</div>
+          <div class="comp-io">1 input → 0 outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/CSVDestination.md">CSVDestination</a></span>
             <span class="comp-tag tag-dest">Destination</span>
           </div>
-          <div class="comp-desc">Escribe un CSV usando <code>pandas.to_csv</code>. Pasa <code>**kwargs</code> a pandas.</div>
-          <div class="comp-io">1 entrada → 0 salidas</div>
+          <div class="comp-desc">Writes a CSV using <code>pandas.to_csv</code>. Passes <code>**kwargs</code> to pandas.</div>
+          <div class="comp-io">1 input → 0 outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/PostgresDestination.md">PostgresDestination</a></span>
             <span class="comp-tag tag-dest">Destination</span>
           </div>
-          <div class="comp-desc">Carga un DataFrame en PostgreSQL. Soporta <code>if_exists</code>, schema, <code>before_query</code> y <code>after_query</code>.</div>
-          <div class="comp-io">1 entrada → 0 salidas</div>
+          <div class="comp-desc">Loads a DataFrame into PostgreSQL. Supports <code>if_exists</code>, schema, <code>before_query</code>, and <code>after_query</code>.</div>
+          <div class="comp-io">1 input → 0 outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/MySQLDestination.md">MySQLDestination</a></span>
             <span class="comp-tag tag-dest">Destination</span>
           </div>
-          <div class="comp-desc">Carga un DataFrame en MySQL. Mismas opciones de control que PostgresDestination.</div>
-          <div class="comp-io">1 entrada → 0 salidas</div>
+          <div class="comp-desc">Loads a DataFrame into MySQL. Same control options as PostgresDestination.</div>
+          <div class="comp-io">1 input → 0 outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/GCPBigQueryDestination.md">GCPBigQueryDestination</a></span>
             <span class="comp-tag tag-dest">Destination</span>
           </div>
-          <div class="comp-desc">Carga en BigQuery. Soporta particionamiento, clustering, <code>write_disposition</code> y <code>schema_update_options</code>.</div>
-          <div class="comp-io">1 entrada → 0 salidas</div>
+          <div class="comp-desc">Loads into BigQuery. Supports partitioning, clustering, <code>write_disposition</code>, and <code>schema_update_options</code>.</div>
+          <div class="comp-io">1 input → 0 outputs</div>
         </div>
       </div>
     </div>
@@ -810,48 +810,48 @@ flowchart LR
             <span class="comp-name"><a href="docs/Filter.md">Filter</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Filtra filas por condición. Operadores: <code>&lt; &gt; &lt;= &gt;= != = in not_in between</code>.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Filters rows by condition. Operators: <code>&lt; &gt; &lt;= &gt;= != = in not_in between</code>.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/Aggregator.md">Aggregator</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Agrupa por clave y agrega. Funciones: <code>sum count mean min max first last</code>.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Groups by key and aggregates. Functions: <code>sum count mean min max first last</code>.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/Transformer.md">Transformer</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Aplica cualquier función Python que reciba un DataFrame y devuelva un DataFrame.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Applies any Python function that receives a DataFrame and returns a DataFrame.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/Joiner.md">Joiner</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Une dos DataFrames por clave. Tipos: <code>inner left right</code>. Soporta claves compuestas.</div>
-          <div class="comp-io">2 entradas → 1 salida</div>
+          <div class="comp-desc">Joins two DataFrames by key. Types: <code>inner left right</code>. Supports composite keys.</div>
+          <div class="comp-io">2 inputs → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/DeleteColumns.md">DeleteColumns</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Elimina una lista de columnas del DataFrame.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Removes a list of columns from the DataFrame.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/RemoveDuplicates.md">RemoveDuplicates</a></span>
             <span class="comp-tag tag-node">Node</span>
           </div>
-          <div class="comp-desc">Desduplicación por clave, con sort y criterio de retención (<code>first</code> / <code>last</code>).</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Deduplication by key, with sort and retention criterion (<code>first</code> / <code>last</code>).</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
       </div>
     </div>
@@ -864,24 +864,24 @@ flowchart LR
             <span class="comp-name"><a href="docs/Copy.md">Copy</a></span>
             <span class="comp-tag tag-router">Router</span>
           </div>
-          <div class="comp-desc">Duplica el DataFrame hacia múltiples salidas. Cada salida recibe una copia independiente.</div>
-          <div class="comp-io">1 entrada → N salidas</div>
+          <div class="comp-desc">Duplicates the DataFrame to multiple outputs. Each output receives an independent copy.</div>
+          <div class="comp-io">1 input → N outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/Switcher.md">Switcher</a></span>
             <span class="comp-tag tag-router">Router</span>
           </div>
-          <div class="comp-desc">Enruta cada fila a un pipe distinto según el valor de un campo. Mapeo <code>valor → nombre_pipe</code>.</div>
-          <div class="comp-io">1 entrada → N salidas</div>
+          <div class="comp-desc">Routes each row to a different pipe based on a field value. Mapping: <code>value → pipe_name</code>.</div>
+          <div class="comp-io">1 input → N outputs</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/Funnel.md">Funnel</a></span>
             <span class="comp-tag tag-router">Router</span>
           </div>
-          <div class="comp-desc">Concatena múltiples streams en uno. Acepta cualquier número de entradas y emite cuando todas llegaron.</div>
-          <div class="comp-io">N entradas → 1 salida</div>
+          <div class="comp-desc">Concatenates multiple streams into one. Accepts any number of inputs and emits when all have arrived.</div>
+          <div class="comp-io">N inputs → 1 output</div>
         </div>
       </div>
     </div>
@@ -894,49 +894,49 @@ flowchart LR
             <span class="comp-name"><a href="docs/AnthropicPromptTransformer.md">AnthropicPromptTransformer</a></span>
             <span class="comp-tag tag-ai">AI</span>
           </div>
-          <div class="comp-desc">Transforma un DataFrame usando Claude de Anthropic. Serializa a CSV, llama al LLM con tu prompt y parsea la respuesta de vuelta a DataFrame.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Transforms a DataFrame using Anthropic's Claude. Serializes to CSV, calls the LLM with your prompt, and parses the response back to a DataFrame.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/OpenAIPromptTransformer.md">OpenAIPromptTransformer</a></span>
             <span class="comp-tag tag-ai">AI</span>
           </div>
-          <div class="comp-desc">Transforma un DataFrame usando GPT de OpenAI. Mismo ciclo CSV → LLM → CSV que el resto de AI Transformers.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Transforms a DataFrame using OpenAI's GPT. Same CSV → LLM → CSV cycle as the other AI Transformers.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/GeminiPromptTransformer.md">GeminiPromptTransformer</a></span>
             <span class="comp-tag tag-ai">AI</span>
           </div>
-          <div class="comp-desc">Transforma un DataFrame usando Gemini de Google. Autenticación por API key o service account.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Transforms a DataFrame using Google's Gemini. Authentication via API key or service account.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
         <div class="comp-card">
           <div class="comp-card-header">
             <span class="comp-name"><a href="docs/DeepSeekPromptTransformer.md">DeepSeekPromptTransformer</a></span>
             <span class="comp-tag tag-ai">AI</span>
           </div>
-          <div class="comp-desc">Transforma un DataFrame usando DeepSeek R1 / V3. Límite fijo de 8192 tokens de salida.</div>
-          <div class="comp-io">1 entrada → 1 salida</div>
+          <div class="comp-desc">Transforms a DataFrame using DeepSeek R1 / V3. Fixed output limit of 8192 tokens.</div>
+          <div class="comp-io">1 input → 1 output</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Ejemplos ── -->
-<section id="ejemplos">
+<!-- ── Examples ── -->
+<section id="examples">
   <div class="container">
-    <div class="section-label">Ejemplos</div>
-    <h2 class="section-title">Casos de uso reales</h2>
-    <p class="section-sub">Desde una migración entre bases de datos hasta transformación con IA — todo con el mismo patrón.</p>
+    <div class="section-label">Examples</div>
+    <h2 class="section-title">Real-world use cases</h2>
+    <p class="section-sub">From a database migration to AI-powered transformation — all with the same pattern.</p>
 
     <div class="examples-grid">
       <div class="example-card">
         <div class="example-header">
-          <h3>Filtrar y agregar</h3>
+          <h3>Filter and aggregate</h3>
           <p>CSV → Filter → Aggregator → CSV</p>
         </div>
         <div class="example-body">
@@ -945,18 +945,18 @@ flowchart LR
     <span class="cls">CSVOrigin</span>, <span class="cls">Filter</span>, <span class="cls">Aggregator</span>, <span class="cls">CSVDestination</span>
 )
 
-origin = <span class="cls">CSVOrigin</span>(<span class="str">"ventas"</span>, filepath_or_buffer=<span class="str">"ventas.csv"</span>)
-filtro = <span class="cls">Filter</span>(<span class="str">"alto_valor"</span>, field=<span class="str">"monto"</span>,
-               condition=<span class="str">">"</span>, value_or_values=<span class="num">1000</span>)
-agrega = <span class="cls">Aggregator</span>(<span class="str">"por_region"</span>, key=<span class="str">"region"</span>,
-                   agg_field_name=<span class="str">"total"</span>, agg_type=<span class="str">"sum"</span>,
-                   field_to_agg=<span class="str">"monto"</span>)
-destino = <span class="cls">CSVDestination</span>(<span class="str">"resumen"</span>,
-                         path_or_buf=<span class="str">"resumen.csv"</span>, index=<span class="cls">False</span>)
+origin      = <span class="cls">CSVOrigin</span>(<span class="str">"sales"</span>, filepath_or_buffer=<span class="str">"sales.csv"</span>)
+filter_node = <span class="cls">Filter</span>(<span class="str">"high_value"</span>, field=<span class="str">"amount"</span>,
+                     condition=<span class="str">">"</span>, value_or_values=<span class="num">1000</span>)
+aggregator  = <span class="cls">Aggregator</span>(<span class="str">"by_region"</span>, key=<span class="str">"region"</span>,
+                          agg_field_name=<span class="str">"total"</span>, agg_type=<span class="str">"sum"</span>,
+                          field_to_agg=<span class="str">"amount"</span>)
+dest        = <span class="cls">CSVDestination</span>(<span class="str">"summary"</span>,
+                             path_or_buf=<span class="str">"summary.csv"</span>, index=<span class="cls">False</span>)
 
-origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filtro)
-filtro.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(agrega)
-agrega.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(destino)
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(filter_node)
+filter_node.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(aggregator)
+aggregator.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p3"</span>)).set_destination(dest)
 origin.pump()</pre>
         </div>
         <div class="diagram-section">
@@ -975,7 +975,7 @@ flowchart LR
 
       <div class="example-card">
         <div class="example-header">
-          <h3>Migración entre bases de datos</h3>
+          <h3>Database migration</h3>
           <p>MySQL → PostgreSQL</p>
         </div>
         <div class="example-body">
@@ -984,19 +984,19 @@ flowchart LR
 <span class="kw">from</span> <span class="var">open_stage.postgres.common</span> <span class="kw">import</span> <span class="cls">PostgresDestination</span>
 
 origin = <span class="cls">MySQLOrigin</span>(
-    name=<span class="str">"fuente"</span>,
-    host=<span class="str">"localhost"</span>, database=<span class="str">"origen"</span>,
+    name=<span class="str">"source"</span>,
+    host=<span class="str">"localhost"</span>, database=<span class="str">"origin"</span>,
     user=<span class="str">"root"</span>, password=<span class="str">"..."</span>,
-    query=<span class="str">"SELECT * FROM clientes WHERE activo = 1"</span>,
+    query=<span class="str">"SELECT * FROM customers WHERE active = 1"</span>,
 )
-destino = <span class="cls">PostgresDestination</span>(
-    name=<span class="str">"destino"</span>,
-    host=<span class="str">"localhost"</span>, database=<span class="str">"destino"</span>,
+dest = <span class="cls">PostgresDestination</span>(
+    name=<span class="str">"destination"</span>,
+    host=<span class="str">"localhost"</span>, database=<span class="str">"target"</span>,
     user=<span class="str">"postgres"</span>, password=<span class="str">"..."</span>,
-    table=<span class="str">"clientes"</span>, if_exists=<span class="str">"append"</span>,
+    table=<span class="str">"customers"</span>, if_exists=<span class="str">"append"</span>,
 )
 
-origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"migrar"</span>)).set_destination(destino)
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"migrate"</span>)).set_destination(dest)
 origin.pump()</pre>
         </div>
         <div class="diagram-section">
@@ -1005,15 +1005,15 @@ origin.pump()</pre>
 flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
-    A([MySQLOrigin]):::origin -->|migrar| B([PostgresDestination]):::dest
+    A([MySQLOrigin]):::origin -->|migrate| B([PostgresDestination]):::dest
           </div>
         </div>
       </div>
 
       <div class="example-card">
         <div class="example-header">
-          <h3>Bifurcación de flujo</h3>
-          <p>Switcher distribuye, Funnel reúne</p>
+          <h3>Flow branching</h3>
+          <p>Switcher routes, Funnel merges</p>
         </div>
         <div class="example-body">
           <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
@@ -1023,20 +1023,20 @@ flowchart LR
 <span class="kw">import</span> <span class="var">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
 
 df = pd.DataFrame({
-    <span class="str">"producto"</span>:  [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>],
-    <span class="str">"categoria"</span>: [<span class="str">"elec"</span>, <span class="str">"ropa"</span>, <span class="str">"elec"</span>, <span class="str">"ropa"</span>],
+    <span class="str">"product"</span>:  [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>],
+    <span class="str">"category"</span>: [<span class="str">"elec"</span>, <span class="str">"clothing"</span>, <span class="str">"elec"</span>, <span class="str">"clothing"</span>],
 })
 
-origin   = <span class="cls">OpenOrigin</span>(<span class="str">"datos"</span>, df)
-switcher = <span class="cls">Switcher</span>(<span class="str">"por_cat"</span>, field=<span class="str">"categoria"</span>,
-                   mapping={<span class="str">"elec"</span>: <span class="str">"p_elec"</span>, <span class="str">"ropa"</span>: <span class="str">"p_ropa"</span>})
-funnel   = <span class="cls">Funnel</span>(<span class="str">"reunir"</span>)
-printer  = <span class="cls">Printer</span>(<span class="str">"salida"</span>)
+origin   = <span class="cls">OpenOrigin</span>(<span class="str">"data"</span>, df)
+switcher = <span class="cls">Switcher</span>(<span class="str">"by_cat"</span>, field=<span class="str">"category"</span>,
+                   mapping={<span class="str">"elec"</span>: <span class="str">"p_elec"</span>, <span class="str">"clothing"</span>: <span class="str">"p_clothing"</span>})
+funnel   = <span class="cls">Funnel</span>(<span class="str">"merge"</span>)
+printer  = <span class="cls">Printer</span>(<span class="str">"output"</span>)
 
-origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"entrada"</span>)).set_destination(switcher)
+origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"input"</span>)).set_destination(switcher)
 switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_elec"</span>)).set_destination(funnel)
-switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_ropa"</span>)).set_destination(funnel)
-funnel.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"salida"</span>)).set_destination(printer)
+switcher.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p_clothing"</span>)).set_destination(funnel)
+funnel.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"output"</span>)).set_destination(printer)
 origin.pump()</pre>
         </div>
         <div class="diagram-section">
@@ -1046,18 +1046,18 @@ flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
     classDef nd fill:#160c2a,stroke:#a371f7,color:#c199ff
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
-    A([OpenOrigin]):::origin -->|entrada| B[Switcher]:::nd
+    A([OpenOrigin]):::origin -->|input| B[Switcher]:::nd
     B -->|p_elec| C[Funnel]:::nd
-    B -->|p_ropa| C
-    C -->|salida| D([Printer]):::dest
+    B -->|p_clothing| C
+    C -->|output| D([Printer]):::dest
           </div>
         </div>
       </div>
 
       <div class="example-card">
         <div class="example-header">
-          <h3>Transformación con función propia</h3>
-          <p>Cualquier lógica Python como Node</p>
+          <h3>Custom function transformation</h3>
+          <p>Any Python logic as a Node</p>
         </div>
         <div class="example-body">
           <pre><span class="kw">from</span> <span class="var">open_stage.core.base</span> <span class="kw">import</span> <span class="cls">Pipe</span>
@@ -1065,22 +1065,22 @@ flowchart LR
     <span class="cls">CSVOrigin</span>, <span class="cls">Transformer</span>, <span class="cls">CSVDestination</span>
 )
 
-<span class="kw">def</span> <span class="fn">aplicar_impuesto</span>(df, tasa, envio):
+<span class="kw">def</span> <span class="fn">apply_tax</span>(df, rate, shipping):
     df = df.copy()
-    df[<span class="str">"precio_final"</span>] = df[<span class="str">"precio"</span>] * (<span class="num">1</span> + tasa) + envio
+    df[<span class="str">"final_price"</span>] = df[<span class="str">"price"</span>] * (<span class="num">1</span> + rate) + shipping
     <span class="kw">return</span> df
 
-origin = <span class="cls">CSVOrigin</span>(<span class="str">"productos"</span>, filepath_or_buffer=<span class="str">"productos.csv"</span>)
+origin = <span class="cls">CSVOrigin</span>(<span class="str">"products"</span>, filepath_or_buffer=<span class="str">"products.csv"</span>)
 tx = <span class="cls">Transformer</span>(
-    name=<span class="str">"precio_final"</span>,
-    transformer_function=aplicar_impuesto,
-    transformer_kwargs={<span class="str">"tasa"</span>: <span class="num">0.16</span>, <span class="str">"envio"</span>: <span class="num">50</span>},
+    name=<span class="str">"final_price"</span>,
+    transformer_function=apply_tax,
+    transformer_kwargs={<span class="str">"rate"</span>: <span class="num">0.16</span>, <span class="str">"shipping"</span>: <span class="num">50</span>},
 )
-destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>,
-                         path_or_buf=<span class="str">"con_precio.csv"</span>, index=<span class="cls">False</span>)
+dest = <span class="cls">CSVDestination</span>(<span class="str">"result"</span>,
+                       path_or_buf=<span class="str">"with_price.csv"</span>, index=<span class="cls">False</span>)
 
 origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(tx)
-tx.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
+tx.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(dest)
 origin.pump()</pre>
         </div>
         <div class="diagram-section">
@@ -1100,11 +1100,11 @@ flowchart LR
 </section>
 
 <!-- ── AI Transformers ── -->
-<section id="ia">
+<section id="ai">
   <div class="container">
     <div class="section-label">AI Transformers</div>
-    <h2 class="section-title">LLMs como Nodes en tu pipeline</h2>
-    <p class="section-sub">Los AI Transformers reciben un DataFrame, lo serializan a CSV, lo envían al modelo con tu prompt, y parsean la respuesta de vuelta a DataFrame.</p>
+    <h2 class="section-title">LLMs as Nodes in your pipeline</h2>
+    <p class="section-sub">AI Transformers receive a DataFrame, serialize it to CSV, send it to the model with your prompt, and parse the response back to a DataFrame.</p>
 
     <div class="ai-providers">
       <div class="ai-card">
@@ -1140,20 +1140,20 @@ flowchart LR
 <span class="kw">from</span> <span class="var">open_stage.core.common</span> <span class="kw">import</span> <span class="cls">CSVOrigin</span>, <span class="cls">CSVDestination</span>
 <span class="kw">from</span> <span class="var">open_stage.anthropic.claude</span> <span class="kw">import</span> <span class="cls">AnthropicPromptTransformer</span>
 
-origin = <span class="cls">CSVOrigin</span>(<span class="str">"resenas"</span>, filepath_or_buffer=<span class="str">"resenas.csv"</span>)
+origin = <span class="cls">CSVOrigin</span>(<span class="str">"reviews"</span>, filepath_or_buffer=<span class="str">"reviews.csv"</span>)
 
 ai = <span class="cls">AnthropicPromptTransformer</span>(
-    name=<span class="str">"sentimiento"</span>,
+    name=<span class="str">"sentiment"</span>,
     model=<span class="str">"claude-sonnet-4-5-20250929"</span>,
     api_key=<span class="str">"sk-ant-..."</span>,
-    prompt=<span class="str">"Agrega una columna 'sentimiento' con: positivo, neutro o negativo, "</span>
-           <span class="str">"basándote en la columna 'resena'."</span>,
+    prompt=<span class="str">"Add a 'sentiment' column with: positive, neutral, or negative, "</span>
+           <span class="str">"based on the 'review' column."</span>,
 )
 
-destino = <span class="cls">CSVDestination</span>(<span class="str">"resultado"</span>, path_or_buf=<span class="str">"clasificadas.csv"</span>, index=<span class="cls">False</span>)
+dest = <span class="cls">CSVDestination</span>(<span class="str">"result"</span>, path_or_buf=<span class="str">"classified.csv"</span>, index=<span class="cls">False</span>)
 
 origin.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p1"</span>)).set_destination(ai)
-ai.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(destino)
+ai.add_output_pipe(<span class="cls">Pipe</span>(<span class="str">"p2"</span>)).set_destination(dest)
 
 origin.pump()</pre>
       </div>
@@ -1172,37 +1172,37 @@ flowchart LR
 
     <div style="margin-top: 24px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px;">
       <p style="font-size:14px; color: var(--text-muted); line-height: 1.7;">
-        <strong style="color: var(--text);">Flujo interno del AI Transformer:</strong><br>
-        1. Recibe el DataFrame &nbsp;&rarr;&nbsp;
-        2. Lo serializa a CSV &nbsp;&rarr;&nbsp;
-        3. Lo envía al LLM junto con el prompt &nbsp;&rarr;&nbsp;
-        4. Parsea la respuesta CSV de vuelta a DataFrame &nbsp;&rarr;&nbsp;
-        5. Lo reenvía al siguiente componente
+        <strong style="color: var(--text);">AI Transformer internal flow:</strong><br>
+        1. Receives the DataFrame &nbsp;&rarr;&nbsp;
+        2. Serializes it to CSV &nbsp;&rarr;&nbsp;
+        3. Sends it to the LLM along with the prompt &nbsp;&rarr;&nbsp;
+        4. Parses the CSV response back to a DataFrame &nbsp;&rarr;&nbsp;
+        5. Forwards it to the next component
       </p>
     </div>
   </div>
 </section>
 
-<!-- ── Instalación ── -->
-<section id="instalacion">
+<!-- ── Installation ── -->
+<section id="installation">
   <div class="container">
-    <div class="section-label">Instalación</div>
-    <h2 class="section-title">En marcha en segundos</h2>
-    <p class="section-sub">Instala solo las dependencias que necesitas con extras opcionales.</p>
+    <div class="section-label">Installation</div>
+    <h2 class="section-title">Up and running in seconds</h2>
+    <p class="section-sub">Install only the dependencies you need with optional extras.</p>
 
     <div class="install-block">
       <div class="install-tabs" id="installTabs">
-        <div class="install-tab active" data-panel="inst-all">Todo</div>
+        <div class="install-tab active" data-panel="inst-all">All</div>
         <div class="install-tab" data-panel="inst-postgres">Postgres</div>
-        <div class="install-tab" data-panel="inst-ai">IA</div>
-        <div class="install-tab" data-panel="inst-custom">Personalizado</div>
+        <div class="install-tab" data-panel="inst-ai">AI</div>
+        <div class="install-tab" data-panel="inst-custom">Custom</div>
       </div>
       <div class="install-tab-panel active" id="panel-inst-all">
-        <pre><span class="cmt"># Instalar con todos los extras</span>
+        <pre><span class="cmt"># Install with all extras</span>
 pip install -e <span class="str">".[all]"</span></pre>
       </div>
       <div class="install-tab-panel" id="panel-inst-postgres">
-        <pre><span class="cmt"># Solo PostgreSQL</span>
+        <pre><span class="cmt"># PostgreSQL only</span>
 pip install -e <span class="str">".[postgres]"</span></pre>
       </div>
       <div class="install-tab-panel" id="panel-inst-ai">
@@ -1210,7 +1210,7 @@ pip install -e <span class="str">".[postgres]"</span></pre>
 pip install -e <span class="str">".[anthropic,openai]"</span></pre>
       </div>
       <div class="install-tab-panel" id="panel-inst-custom">
-        <pre><span class="cmt"># Combina lo que necesites</span>
+        <pre><span class="cmt"># Mix and match what you need</span>
 pip install -e <span class="str">".[postgres,anthropic,bigquery]"</span></pre>
       </div>
     </div>
@@ -1246,7 +1246,7 @@ pip install -e <span class="str">".[postgres,anthropic,bigquery]"</span></pre>
       </div>
       <div class="extra-card">
         <div class="extra-name">all</div>
-        <div class="extra-deps">todos los anteriores</div>
+        <div class="extra-deps">all of the above</div>
       </div>
     </div>
   </div>

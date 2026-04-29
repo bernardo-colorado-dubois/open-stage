@@ -1,49 +1,49 @@
 # Open-Stage
 
-Un framework ETL para Python inspirado en IBM DataStage. Permite construir pipelines de datos conectando componentes reutilizables mediante tuberías (pipes).
+An ETL framework for Python inspired by IBM DataStage. Build data pipelines by connecting reusable components through pipes.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
-## Cómo funciona
+## How it works
 
-Un pipeline en Open-Stage es una cadena de componentes conectados por `Pipe`s. Los datos fluyen de izquierda a derecha. Hay tres tipos de componentes:
+A pipeline in Open-Stage is a chain of components connected by `Pipe`s. Data flows left to right. There are three types of components:
 
-- **Origin** — produce datos (lee un CSV, consulta una base de datos, llama una API)
-- **Node** — recibe datos, los transforma, y los reenvía
-- **Destination** — recibe datos y los escribe (archivo, base de datos, consola)
+- **Origin** — produces data (reads a CSV, queries a database, calls an API)
+- **Node** — receives data, transforms it, and forwards it
+- **Destination** — receives data and writes it (file, database, console)
 
 ```
 Origin ──pipe──> Node ──pipe──> Node ──pipe──> Destination
 ```
 
-En código:
+In code:
 
 ```python
 origin.add_output_pipe(Pipe("p1")).set_destination(node)
 node.add_output_pipe(Pipe("p2")).set_destination(destination)
 
-origin.pump()  # dispara todo el pipeline
+origin.pump()  # fires the entire pipeline
 ```
 
-Cada componente tiene reglas de conectividad claras. Por ejemplo, `Filter` acepta exactamente 1 entrada y 1 salida. Si intentas conectar dos entradas, lanza un `ValueError` de inmediato.
+Every component has clear connectivity rules. For example, `Filter` accepts exactly 1 input and 1 output. Attempting to connect two inputs raises a `ValueError` immediately.
 
 ---
 
-## Instalación
+## Installation
 
 ```bash
-# Todo incluido
+# All included
 pip install -e ".[all]"
 
-# Solo lo que necesitas
+# Only what you need
 pip install -e ".[postgres,anthropic]"
 pip install -e ".[mysql,openai]"
 ```
 
-| Extra | Dependencias |
+| Extra | Dependencies |
 |-------|-------------|
 | `postgres` | sqlalchemy, psycopg2-binary |
 | `mysql` | sqlalchemy, pymysql |
@@ -52,87 +52,87 @@ pip install -e ".[mysql,openai]"
 | `openai` | openai |
 | `deepseek` | openai |
 | `gemini` | google-genai, google-generativeai |
-| `all` | todo lo anterior |
+| `all` | all of the above |
 
 ---
 
-## Tu primer pipeline
+## Your first pipeline
 
-Lee un CSV, filtra filas y escribe el resultado en otro CSV.
+Read a CSV, filter rows, and write the result to another CSV.
 
 ```python
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Filter, CSVDestination
 
-# 1. Definir componentes
-origin = CSVOrigin("ventas", filepath_or_buffer="ventas.csv")
-filtro = Filter("solo_2024", field="año", condition="=", value_or_values=2024)
-destino = CSVDestination("resultado", path_or_buf="ventas_2024.csv", index=False)
+# 1. Define components
+origin      = CSVOrigin("sales", filepath_or_buffer="sales.csv")
+filter_node = Filter("only_2024", field="year", condition="=", value_or_values=2024)
+dest        = CSVDestination("result", path_or_buf="sales_2024.csv", index=False)
 
-# 2. Conectar con pipes
-origin.add_output_pipe(Pipe("p1")).set_destination(filtro)
-filtro.add_output_pipe(Pipe("p2")).set_destination(destino)
+# 2. Connect with pipes
+origin.add_output_pipe(Pipe("p1")).set_destination(filter_node)
+filter_node.add_output_pipe(Pipe("p2")).set_destination(dest)
 
-# 3. Ejecutar
+# 3. Run
 origin.pump()
 ```
 
 ```mermaid
 graph LR
-    A[CSVOrigin<br/>ventas.csv] -->|p1| B[Filter<br/>año = 2024]
-    B -->|p2| C[CSVDestination<br/>ventas_2024.csv]
+    A[CSVOrigin<br/>sales.csv] -->|p1| B[Filter<br/>year = 2024]
+    B -->|p2| C[CSVDestination<br/>sales_2024.csv]
 ```
 
 ---
 
-## Componentes disponibles
+## Available components
 
-### Origins — producen datos
+### Origins — produce data
 
-| Componente | Qué hace | Import |
-|------------|----------|--------|
-| [`CSVOrigin`](docs/CSVOrigin.md) | Lee un CSV (`pandas.read_csv`) | `open_stage.core.common` |
-| [`OpenOrigin`](docs/OpenOrigin.md) | Envuelve un DataFrame existente | `open_stage.core.common` |
-| [`APIRestOrigin`](docs/APIRestOrigin.md) | Consume un endpoint REST | `open_stage.core.common` |
-| [`PostgresOrigin`](docs/PostgresOrigin.md) | Consulta PostgreSQL | `open_stage.postgres.common` |
-| [`MySQLOrigin`](docs/MySQLOrigin.md) | Consulta MySQL | `open_stage.mysql.common` |
-| [`GCPBigQueryOrigin`](docs/GCPBigQueryOrigin.md) | Consulta BigQuery | `open_stage.google.bigquery` |
+| Component | Description | Import |
+|-----------|-------------|--------|
+| [`CSVOrigin`](docs/CSVOrigin.md) | Reads a CSV (`pandas.read_csv`) | `open_stage.core.common` |
+| [`OpenOrigin`](docs/OpenOrigin.md) | Wraps an existing DataFrame | `open_stage.core.common` |
+| [`APIRestOrigin`](docs/APIRestOrigin.md) | Consumes a REST endpoint | `open_stage.core.common` |
+| [`PostgresOrigin`](docs/PostgresOrigin.md) | Queries PostgreSQL | `open_stage.postgres.common` |
+| [`MySQLOrigin`](docs/MySQLOrigin.md) | Queries MySQL | `open_stage.mysql.common` |
+| [`GCPBigQueryOrigin`](docs/GCPBigQueryOrigin.md) | Queries BigQuery | `open_stage.google.bigquery` |
 
-### Destinations — escriben datos
+### Destinations — write data
 
-| Componente | Qué hace | Import |
-|------------|----------|--------|
-| [`Printer`](docs/Printer.md) | Imprime el DataFrame en consola | `open_stage.core.common` |
-| [`CSVDestination`](docs/CSVDestination.md) | Escribe un CSV (`pandas.to_csv`) | `open_stage.core.common` |
-| [`PostgresDestination`](docs/PostgresDestination.md) | Carga datos en PostgreSQL | `open_stage.postgres.common` |
-| [`MySQLDestination`](docs/MySQLDestination.md) | Carga datos en MySQL | `open_stage.mysql.common` |
-| [`GCPBigQueryDestination`](docs/GCPBigQueryDestination.md) | Carga datos en BigQuery | `open_stage.google.bigquery` |
+| Component | Description | Import |
+|-----------|-------------|--------|
+| [`Printer`](docs/Printer.md) | Prints the DataFrame to the console | `open_stage.core.common` |
+| [`CSVDestination`](docs/CSVDestination.md) | Writes a CSV (`pandas.to_csv`) | `open_stage.core.common` |
+| [`PostgresDestination`](docs/PostgresDestination.md) | Loads data into PostgreSQL | `open_stage.postgres.common` |
+| [`MySQLDestination`](docs/MySQLDestination.md) | Loads data into MySQL | `open_stage.mysql.common` |
+| [`GCPBigQueryDestination`](docs/GCPBigQueryDestination.md) | Loads data into BigQuery | `open_stage.google.bigquery` |
 
-### Transformers — 1 entrada, 1 salida
+### Transformers — 1 input, 1 output
 
-| Componente | Qué hace |
-|------------|----------|
-| [`Filter`](docs/Filter.md) | Filtra filas por condición (`<`, `>`, `<=`, `>=`, `!=`, `=`, `in`, `not in`, `between`) |
-| [`Aggregator`](docs/Aggregator.md) | Agrupa por clave y agrega (`sum`, `count`, `mean`, `min`, `max`, …) |
-| [`DeleteColumns`](docs/DeleteColumns.md) | Elimina columnas |
-| [`RemoveDuplicates`](docs/RemoveDuplicates.md) | Desduplicación por clave, con sort y criterio de retención |
-| [`Joiner`](docs/Joiner.md) | Une dos DataFrames por clave (`inner`, `left`, `right`) |
-| [`Transformer`](docs/Transformer.md) | Aplica una función Python personalizada |
+| Component | Description |
+|-----------|-------------|
+| [`Filter`](docs/Filter.md) | Filters rows by condition (`<`, `>`, `<=`, `>=`, `!=`, `=`, `in`, `not in`, `between`) |
+| [`Aggregator`](docs/Aggregator.md) | Groups by key and aggregates (`sum`, `count`, `mean`, `min`, `max`, …) |
+| [`DeleteColumns`](docs/DeleteColumns.md) | Removes columns |
+| [`RemoveDuplicates`](docs/RemoveDuplicates.md) | Deduplication by key, with sort and retention criterion |
+| [`Joiner`](docs/Joiner.md) | Joins two DataFrames by key (`inner`, `left`, `right`) |
+| [`Transformer`](docs/Transformer.md) | Applies a custom Python function |
 
-### Routers — distribuyen el flujo
+### Routers — distribute the flow
 
-| Componente | Conectividad | Qué hace |
-|------------|--------------|----------|
-| [`Funnel`](docs/Funnel.md) | N → 1 | Concatena múltiples streams en uno |
-| [`Copy`](docs/Copy.md) | 1 → N | Duplica los datos hacia múltiples salidas |
-| [`Switcher`](docs/Switcher.md) | 1 → N | Enruta filas a distintas salidas según el valor de un campo |
+| Component | Connectivity | Description |
+|-----------|--------------|-------------|
+| [`Funnel`](docs/Funnel.md) | N → 1 | Concatenates multiple streams into one |
+| [`Copy`](docs/Copy.md) | 1 → N | Duplicates data to multiple outputs |
+| [`Switcher`](docs/Switcher.md) | 1 → N | Routes rows to different outputs based on a field value |
 
-### AI Transformers — transformación con LLM (1 entrada, 1 salida)
+### AI Transformers — LLM transformation (1 input, 1 output)
 
-Reciben un DataFrame, lo envían como CSV al modelo con un prompt, y parsean la respuesta CSV de vuelta a DataFrame.
+Receive a DataFrame, send it as CSV to the model with a prompt, and parse the CSV response back to a DataFrame.
 
-| Componente | Proveedor | Import |
-|------------|-----------|--------|
+| Component | Provider | Import |
+|-----------|----------|--------|
 | [`AnthropicPromptTransformer`](docs/AnthropicPromptTransformer.md) | Anthropic (Claude) | `open_stage.anthropic.claude` |
 | [`OpenAIPromptTransformer`](docs/OpenAIPromptTransformer.md) | OpenAI (GPT) | `open_stage.open_ai.transformer` |
 | [`GeminiPromptTransformer`](docs/GeminiPromptTransformer.md) | Google (Gemini) | `open_stage.google.gemini` |
@@ -140,66 +140,66 @@ Reciben un DataFrame, lo envían como CSV al modelo con un prompt, y parsean la 
 
 ---
 
-## Ejemplos
+## Examples
 
-### Filtrar y agregar
+### Filter and aggregate
 
 ```python
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Filter, Aggregator, CSVDestination
 
-origin = CSVOrigin("ventas", filepath_or_buffer="ventas.csv")
-filtro  = Filter("alto_valor", field="monto", condition=">", value_or_values=1000)
-agrega  = Aggregator("por_region", key="region", agg_field_name="total",
-                     agg_type="sum", field_to_agg="monto")
-destino = CSVDestination("resumen", path_or_buf="resumen.csv", index=False)
+origin      = CSVOrigin("sales", filepath_or_buffer="sales.csv")
+filter_node = Filter("high_value", field="amount", condition=">", value_or_values=1000)
+aggregator  = Aggregator("by_region", key="region", agg_field_name="total",
+                         agg_type="sum", field_to_agg="amount")
+dest        = CSVDestination("summary", path_or_buf="summary.csv", index=False)
 
-origin.add_output_pipe(Pipe("p1")).set_destination(filtro)
-filtro.add_output_pipe(Pipe("p2")).set_destination(agrega)
-agrega.add_output_pipe(Pipe("p3")).set_destination(destino)
+origin.add_output_pipe(Pipe("p1")).set_destination(filter_node)
+filter_node.add_output_pipe(Pipe("p2")).set_destination(aggregator)
+aggregator.add_output_pipe(Pipe("p3")).set_destination(dest)
 
 origin.pump()
 ```
 
 ```mermaid
 graph LR
-    A[CSVOrigin] -->|p1| B[Filter<br/>monto > 1000]
-    B -->|p2| C[Aggregator<br/>SUM monto<br/>GROUP BY region]
+    A[CSVOrigin] -->|p1| B[Filter<br/>amount > 1000]
+    B -->|p2| C[Aggregator<br/>SUM amount<br/>GROUP BY region]
     C -->|p3| D[CSVDestination]
 ```
 
 ---
 
-### Transformación personalizada
+### Custom transformation
 
-`Transformer` aplica cualquier función que reciba un DataFrame y devuelva un DataFrame.
+`Transformer` applies any function that receives a DataFrame and returns a DataFrame.
 
 ```python
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, Transformer, CSVDestination
 
-def aplicar_impuesto(df, tasa, envio):
+def apply_tax(df, rate, shipping):
     df = df.copy()
-    df["precio_final"] = df["precio"] * (1 + tasa) + envio
+    df["final_price"] = df["price"] * (1 + rate) + shipping
     return df
 
-origin      = CSVOrigin("productos", filepath_or_buffer="productos.csv")
+origin      = CSVOrigin("products", filepath_or_buffer="products.csv")
 transformer = Transformer(
-    name="precio_con_impuesto",
-    transformer_function=aplicar_impuesto,
-    transformer_kwargs={"tasa": 0.16, "envio": 50},
+    name="price_with_tax",
+    transformer_function=apply_tax,
+    transformer_kwargs={"rate": 0.16, "shipping": 50},
 )
-destino = CSVDestination("resultado", path_or_buf="productos_con_precio.csv", index=False)
+dest = CSVDestination("result", path_or_buf="products_with_price.csv", index=False)
 
 origin.add_output_pipe(Pipe("p1")).set_destination(transformer)
-transformer.add_output_pipe(Pipe("p2")).set_destination(destino)
+transformer.add_output_pipe(Pipe("p2")).set_destination(dest)
 
 origin.pump()
 ```
 
 ---
 
-### Separar y reunir flujos (Switcher + Funnel)
+### Split and merge flows (Switcher + Funnel)
 
 ```python
 from open_stage.core.base import Pipe
@@ -207,40 +207,40 @@ from open_stage.core.common import OpenOrigin, Switcher, Funnel, Printer
 import pandas as pd
 
 df = pd.DataFrame({
-    "producto": ["A", "B", "C", "D"],
-    "categoria": ["electronico", "ropa", "electronico", "ropa"],
+    "product":  ["A", "B", "C", "D"],
+    "category": ["electronic", "clothing", "electronic", "clothing"],
 })
 
-origin   = OpenOrigin("datos", df)
-switcher = Switcher("por_categoria", field="categoria",
-                    mapping={"electronico": "pipe_elec", "ropa": "pipe_ropa"})
-funnel   = Funnel("reunir")
-printer  = Printer("salida")
+origin   = OpenOrigin("data", df)
+switcher = Switcher("by_category", field="category",
+                    mapping={"electronic": "pipe_elec", "clothing": "pipe_clothing"})
+funnel   = Funnel("merge")
+printer  = Printer("output")
 
-# Conectar origin → switcher
-origin.add_output_pipe(Pipe("entrada")).set_destination(switcher)
+# Connect origin → switcher
+origin.add_output_pipe(Pipe("input")).set_destination(switcher)
 
-# Switcher → funnel (dos ramas)
+# Switcher → funnel (two branches)
 switcher.add_output_pipe(Pipe("pipe_elec")).set_destination(funnel)
-switcher.add_output_pipe(Pipe("pipe_ropa")).set_destination(funnel)
+switcher.add_output_pipe(Pipe("pipe_clothing")).set_destination(funnel)
 
 # Funnel → printer
-funnel.add_output_pipe(Pipe("salida")).set_destination(printer)
+funnel.add_output_pipe(Pipe("output")).set_destination(printer)
 
 origin.pump()
 ```
 
 ```mermaid
 graph LR
-    A[OpenOrigin] -->|entrada| B[Switcher<br/>por categoria]
+    A[OpenOrigin] -->|input| B[Switcher<br/>by category]
     B -->|pipe_elec| C[Funnel]
-    B -->|pipe_ropa| C
-    C -->|salida| D[Printer]
+    B -->|pipe_clothing| C
+    C -->|output| D[Printer]
 ```
 
 ---
 
-### Migración entre bases de datos
+### Database migration
 
 ```python
 from open_stage.core.base import Pipe
@@ -248,84 +248,84 @@ from open_stage.mysql.common import MySQLOrigin
 from open_stage.postgres.common import PostgresDestination
 
 origin = MySQLOrigin(
-    name="fuente",
-    host="localhost", database="origen", user="root", password="...",
-    query="SELECT * FROM clientes WHERE activo = 1",
+    name="source",
+    host="localhost", database="origin", user="root", password="...",
+    query="SELECT * FROM customers WHERE active = 1",
 )
-destino = PostgresDestination(
-    name="destino",
-    host="localhost", database="destino", user="postgres", password="...",
-    table="clientes", schema="public", if_exists="append",
+dest = PostgresDestination(
+    name="destination",
+    host="localhost", database="target", user="postgres", password="...",
+    table="customers", schema="public", if_exists="append",
 )
 
-origin.add_output_pipe(Pipe("migrar")).set_destination(destino)
+origin.add_output_pipe(Pipe("migrate")).set_destination(dest)
 origin.pump()
 ```
 
 ---
 
-### Transformación con IA
+### AI transformation
 
 ```python
 from open_stage.core.base import Pipe
 from open_stage.core.common import CSVOrigin, CSVDestination
 from open_stage.anthropic.claude import AnthropicPromptTransformer
 
-origin = CSVOrigin("resenas", filepath_or_buffer="resenas.csv")
+origin = CSVOrigin("reviews", filepath_or_buffer="reviews.csv")
 
 ai = AnthropicPromptTransformer(
-    name="sentimiento",
+    name="sentiment",
     model="claude-sonnet-4-5-20250929",
     api_key="sk-ant-...",
-    prompt="Agrega una columna 'sentimiento' con los valores: positivo, neutro o negativo, "
-           "basándote en el texto de la columna 'resena'.",
+    prompt="Add a 'sentiment' column with the values: positive, neutral, or negative, "
+           "based on the text in the 'review' column.",
 )
 
-destino = CSVDestination("resultado", path_or_buf="resenas_clasificadas.csv", index=False)
+dest = CSVDestination("result", path_or_buf="classified_reviews.csv", index=False)
 
 origin.add_output_pipe(Pipe("p1")).set_destination(ai)
-ai.add_output_pipe(Pipe("p2")).set_destination(destino)
+ai.add_output_pipe(Pipe("p2")).set_destination(dest)
 
 origin.pump()
 ```
 
-El flujo interno del AI Transformer:
-1. Recibe el DataFrame
-2. Lo serializa a CSV
-3. Lo envía al LLM junto con el prompt
-4. Parsea la respuesta CSV de vuelta a DataFrame
-5. Lo reenvía al siguiente componente
+AI Transformer internal flow:
+1. Receives the DataFrame
+2. Serializes it to CSV
+3. Sends it to the LLM along with the prompt
+4. Parses the CSV response back to a DataFrame
+5. Forwards it to the next component
 
 ---
 
-## Opciones avanzadas de bases de datos
+## Advanced database options
 
-`PostgresOrigin`, `MySQLOrigin` y `GCPBigQueryOrigin` soportan:
+`PostgresOrigin`, `MySQLOrigin`, and `GCPBigQueryOrigin` support:
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `query` | `str` | SQL a ejecutar |
-| `table` | `str` | Lee una tabla completa sin escribir `SELECT *` |
-| `before_query` | `str` | SQL ejecutado **antes** de la consulta principal (temp tables, auditoría) |
-| `after_query` | `str` | SQL ejecutado **después** de la consulta (limpieza, logs) |
-| `query_parameters` | `dict` | Parámetros nombrados usando sintaxis `:nombre` (seguro contra SQL injection) |
-| `max_results` | `int` | Limita las filas devueltas (útil en pruebas) |
-| `timeout` | `float` | Tiempo máximo de ejecución en segundos |
+| `query` | `str` | SQL to execute |
+| `table` | `str` | Reads a full table without writing `SELECT *` |
+| `before_query` | `str` | SQL executed **before** the main query (temp tables, auditing) |
+| `after_query` | `str` | SQL executed **after** the query (cleanup, logs) |
+| `query_parameters` | `dict` | Named parameters using `:name` syntax (safe against SQL injection) |
+| `max_results` | `int` | Limits returned rows (useful in testing) |
+| `timeout` | `float` | Maximum execution time in seconds |
 
-Ejemplo:
+Example:
 
 ```python
 from open_stage.postgres.common import PostgresOrigin
 
 origin = PostgresOrigin(
-    name="extraccion",
+    name="extraction",
     host="localhost", database="dw", user="postgres", password="...",
-    before_query="CREATE TEMP TABLE staging AS SELECT * FROM raw WHERE valido = true",
-    query="SELECT * FROM staging WHERE monto > :minimo",
-    query_parameters={"minimo": 500.0},
+    before_query="CREATE TEMP TABLE staging AS SELECT * FROM raw WHERE valid = true",
+    query="SELECT * FROM staging WHERE amount > :minimum",
+    query_parameters={"minimum": 500.0},
     max_results=10000,
     timeout=120,
-    after_query="INSERT INTO auditoria.log (tabla, fecha) VALUES ('staging', NOW())",
+    after_query="INSERT INTO audit.log (table_name, date) VALUES ('staging', NOW())",
 )
 ```
 
@@ -333,7 +333,7 @@ origin = PostgresOrigin(
 
 ## Logging
 
-Todos los módulos usan `logging.getLogger(__name__)`. Configura el nivel desde tu script:
+All modules use `logging.getLogger(__name__)`. Configure the level from your script:
 
 ```python
 import logging
@@ -345,70 +345,70 @@ logging.basicConfig(
 )
 ```
 
-### Niveles disponibles
+### Available levels
 
-**`WARNING`** — solo problemas. Para producción.
+**`WARNING`** — errors only. For production.
 ```
-10:15:03 WARNING  open_stage.core.common — CSVOrigin 'ventas' has no output pipe configured
-```
-
-**`INFO`** — eventos clave del pipeline. El más común en desarrollo.
-```
-10:15:03 INFO     open_stage.core.common — CSVOrigin 'ventas' read CSV with shape (3547, 11)
-10:15:03 INFO     open_stage.core.common — Filter 'alto_valor' passed 891/3547 rows (monto > 1000)
-10:15:03 INFO     open_stage.core.common — Aggregator 'por_region' completed: 891 rows → 5 groups
-10:15:03 INFO     open_stage.core.common — CSVDestination 'resultado' wrote CSV with 5 rows
+10:15:03 WARNING  open_stage.core.common — CSVOrigin 'sales' has no output pipe configured
 ```
 
-**`DEBUG`** — todo el detalle interno de cada componente.
+**`INFO`** — key pipeline events. Most common in development.
 ```
-10:15:03 INFO     open_stage.core.common — CSVOrigin 'ventas' read CSV with shape (3547, 11)
-10:15:03 DEBUG    open_stage.core.common — CSVOrigin 'ventas' pumped data through pipe 'p1'
-10:15:03 DEBUG    open_stage.core.common — Filter 'alto_valor' received data from pipe 'p1'
-10:15:03 INFO     open_stage.core.common — Filter 'alto_valor' passed 891/3547 rows (monto > 1000)
-10:15:03 DEBUG    open_stage.core.common — Filter 'alto_valor' pumped data through pipe 'p2'
+10:15:03 INFO     open_stage.core.common — CSVOrigin 'sales' read CSV with shape (3547, 11)
+10:15:03 INFO     open_stage.core.common — Filter 'high_value' passed 891/3547 rows (amount > 1000)
+10:15:03 INFO     open_stage.core.common — Aggregator 'by_region' completed: 891 rows → 5 groups
+10:15:03 INFO     open_stage.core.common — CSVDestination 'result' wrote CSV with 5 rows
 ```
 
-### Control por módulo
+**`DEBUG`** — full internal detail for every component.
+```
+10:15:03 INFO     open_stage.core.common — CSVOrigin 'sales' read CSV with shape (3547, 11)
+10:15:03 DEBUG    open_stage.core.common — CSVOrigin 'sales' pumped data through pipe 'p1'
+10:15:03 DEBUG    open_stage.core.common — Filter 'high_value' received data from pipe 'p1'
+10:15:03 INFO     open_stage.core.common — Filter 'high_value' passed 891/3547 rows (amount > 1000)
+10:15:03 DEBUG    open_stage.core.common — Filter 'high_value' pumped data through pipe 'p2'
+```
 
-Puedes silenciar componentes ruidosos sin perder el detalle en otros:
+### Per-module control
+
+You can silence noisy components without losing detail in others:
 
 ```python
 logging.basicConfig(level=logging.DEBUG)
 
-# BigQuery muy verboso — solo advertencias
+# BigQuery very verbose — warnings only
 logging.getLogger("open_stage.google.bigquery").setLevel(logging.WARNING)
 
-# Core en detalle completo
+# Core at full detail
 logging.getLogger("open_stage.core").setLevel(logging.DEBUG)
 ```
 
 ---
 
-## Variables de entorno
+## Environment variables
 
-Crea un archivo `.env` en la raíz del proyecto:
+Create a `.env` file in the project root:
 
 ```dotenv
 # PostgreSQL
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
-POSTGRES_DB=mi_base
+POSTGRES_DB=my_db
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=secreto
+POSTGRES_PASSWORD=secret
 
 # MySQL
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
-MYSQL_DB=mi_base
+MYSQL_DB=my_db
 MYSQL_USER=root
-MYSQL_PASSWORD=secreto
+MYSQL_PASSWORD=secret
 
-# Google (BigQuery y Gemini)
-GCP_PROJECT=mi-proyecto
-GOOGLE_APPLICATION_CREDENTIALS=/ruta/a/service-account.json
+# Google (BigQuery and Gemini)
+GCP_PROJECT=my-project
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
-# Proveedores de IA
+# AI providers
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
 DEEPSEEK_API_KEY=...
@@ -423,18 +423,18 @@ pip install pytest
 pytest tests/ -v
 ```
 
-El suite cubre todos los componentes core sin depender de servicios externos.
+The test suite covers all core components without depending on external services.
 
 ---
 
-## Estructura del proyecto
+## Project structure
 
 ```
 open_stage/
 ├── core/
 │   ├── base.py         # DataPackage, Pipe, Origin, Destination, Node, Mixins
-│   ├── base_ai.py      # BasePromptTransformer — base abstracta para todos los AI Transformers
-│   └── common.py       # Componentes principales (Filter, Aggregator, Joiner, Transformer, …)
+│   ├── base_ai.py      # BasePromptTransformer — abstract base for all AI Transformers
+│   └── common.py       # Core components (Filter, Aggregator, Joiner, Transformer, …)
 ├── postgres/
 │   └── common.py       # PostgresOrigin, PostgresDestination
 ├── mysql/
@@ -457,6 +457,6 @@ tests/
 
 ---
 
-## Licencia
+## License
 
 MIT — Copyright (c) 2025 Bernardo Colorado Dubois
