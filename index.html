@@ -12,8 +12,8 @@
       --border: #30363d;
       --text: #e6edf3;
       --text-muted: #8b949e;
-      --accent: #58a6ff;
-      --accent-2: #79c0ff;
+      --accent: #a371f7;
+      --accent-2: #c199ff;
       --green: #3fb950;
       --purple: #d2a8ff;
       --orange: #ffa657;
@@ -96,8 +96,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(88,166,255,.1);
-      border: 1px solid rgba(88,166,255,.3);
+      background: rgba(163,113,247,.1);
+      border: 1px solid rgba(163,113,247,.3);
       color: var(--accent);
       border-radius: 20px;
       padding: 4px 14px;
@@ -176,7 +176,7 @@
       border: 1px solid;
     }
     .pipeline-box.origin { background: rgba(63,185,80,.12); border-color: rgba(63,185,80,.4); color: var(--green); }
-    .pipeline-box.node   { background: rgba(88,166,255,.12); border-color: rgba(88,166,255,.4); color: var(--accent); }
+    .pipeline-box.node   { background: rgba(163,113,247,.12); border-color: rgba(163,113,247,.4); color: var(--accent); }
     .pipeline-box.ai     { background: rgba(210,168,255,.12); border-color: rgba(210,168,255,.4); color: var(--purple); }
     .pipeline-box.dest   { background: rgba(255,166,87,.12); border-color: rgba(255,166,87,.4); color: var(--orange); }
     .pipeline-label { font-size: 11px; color: var(--text-muted); }
@@ -347,7 +347,7 @@
     }
     .tag-origin  { background: rgba(63,185,80,.15);  color: var(--green); }
     .tag-dest    { background: rgba(255,166,87,.15);  color: var(--orange); }
-    .tag-node    { background: rgba(88,166,255,.15);  color: var(--accent); }
+    .tag-node    { background: rgba(163,113,247,.15);  color: var(--accent); }
     .tag-router  { background: rgba(227,179,65,.15);  color: var(--yellow); }
     .tag-ai      { background: rgba(210,168,255,.15); color: var(--purple); }
     .comp-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
@@ -676,7 +676,7 @@ origin.pump()</pre>
         <div class="mermaid">
 flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
-    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef nd fill:#160c2a,stroke:#a371f7,color:#c199ff
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
     A([CSVOrigin]):::origin -->|p1| B[Filter]:::nd
     B -->|p2| C[Aggregator]:::nd
@@ -699,6 +699,7 @@ flowchart LR
       <div class="comp-tab" data-panel="destinations">Destinations</div>
       <div class="comp-tab" data-panel="transformers">Transformers</div>
       <div class="comp-tab" data-panel="routers">Routers</div>
+      <div class="comp-tab" data-panel="ai">AI</div>
     </div>
 
     <!-- Origins -->
@@ -884,6 +885,44 @@ flowchart LR
         </div>
       </div>
     </div>
+
+    <!-- AI Transformers -->
+    <div class="comp-panel" id="panel-ai">
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/AnthropicPromptTransformer.md">AnthropicPromptTransformer</a></span>
+            <span class="comp-tag tag-ai">AI</span>
+          </div>
+          <div class="comp-desc">Transforma un DataFrame usando Claude de Anthropic. Serializa a CSV, llama al LLM con tu prompt y parsea la respuesta de vuelta a DataFrame.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/OpenAIPromptTransformer.md">OpenAIPromptTransformer</a></span>
+            <span class="comp-tag tag-ai">AI</span>
+          </div>
+          <div class="comp-desc">Transforma un DataFrame usando GPT de OpenAI. Mismo ciclo CSV → LLM → CSV que el resto de AI Transformers.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/GeminiPromptTransformer.md">GeminiPromptTransformer</a></span>
+            <span class="comp-tag tag-ai">AI</span>
+          </div>
+          <div class="comp-desc">Transforma un DataFrame usando Gemini de Google. Autenticación por API key o service account.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-header">
+            <span class="comp-name"><a href="docs/DeepSeekPromptTransformer.md">DeepSeekPromptTransformer</a></span>
+            <span class="comp-tag tag-ai">AI</span>
+          </div>
+          <div class="comp-desc">Transforma un DataFrame usando DeepSeek R1 / V3. Límite fijo de 8192 tokens de salida.</div>
+          <div class="comp-io">1 entrada → 1 salida</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -925,7 +964,7 @@ origin.pump()</pre>
           <div class="mermaid">
 flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
-    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef nd fill:#160c2a,stroke:#a371f7,color:#c199ff
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
     A([CSVOrigin]):::origin -->|p1| B[Filter]:::nd
     B -->|p2| C[Aggregator]:::nd
@@ -1005,7 +1044,7 @@ origin.pump()</pre>
           <div class="mermaid">
 flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
-    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef nd fill:#160c2a,stroke:#a371f7,color:#c199ff
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
     A([OpenOrigin]):::origin -->|entrada| B[Switcher]:::nd
     B -->|p_elec| C[Funnel]:::nd
@@ -1049,7 +1088,7 @@ origin.pump()</pre>
           <div class="mermaid">
 flowchart LR
     classDef origin fill:#0c2a14,stroke:#3fb950,color:#3fb950
-    classDef nd fill:#0c1e35,stroke:#58a6ff,color:#79c0ff
+    classDef nd fill:#160c2a,stroke:#a371f7,color:#c199ff
     classDef dest fill:#2a1a0c,stroke:#ffa657,color:#ffa657
     A([CSVOrigin]):::origin -->|p1| B[Transformer]:::nd
     B -->|p2| C([CSVDestination]):::dest
